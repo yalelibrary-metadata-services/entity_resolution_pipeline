@@ -417,9 +417,16 @@ class FeatureEngineer:
                     right_vectors[field]
                 )
                 
+                # Add debugging to verify the raw similarity value
+                logger.debug(f"Raw {field}_cosine similarity: {similarity}"
+
                 # Normalize cosine similarity from [-1, 1] to [0, 1]
                 # This ensures all similarities have consistent scale
                 normalized_similarity = (similarity + 1) / 2
+                
+                # Add debugging to verify the normalized value
+                logger.debug(f"Normalized {field}_cosine similarity: {normalized_similarity}")
+                
                 features[f"{field}_cosine"] = normalized_similarity
         
         # Apply prefilters if configured

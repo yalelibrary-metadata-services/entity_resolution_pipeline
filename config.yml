@@ -5,7 +5,7 @@
 # System Configuration
 system:
   mode: "dev"  # "dev" or "prod"
-  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: "DEBUG"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
   checkpoint_dir: "./checkpoints"
   output_dir: "./output"
   temp_dir: "./tmp"
