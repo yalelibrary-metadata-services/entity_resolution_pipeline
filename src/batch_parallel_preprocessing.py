@@ -101,7 +101,10 @@ class Preprocessor:
             processed_files = set()
         
         # Find CSV files in input directory
-        csv_files = sorted(self.input_dir.glob('*.csv'))
+        csv_files = sorted(self.input_dir.glob('**/*.csv'))  # Look in subdirectories too
+        if not csv_files:
+            logger.warning(f"No CSV files found in {self.input_dir} or its subdirectories")
+            
         if self.config['system']['mode'] == 'dev':
             # In dev mode, limit the number of files to process
             dev_sample_size = min(
@@ -158,6 +161,11 @@ class Preprocessor:
                     )
                     logger.info(f"Memory usage: {get_memory_usage():.2f} GB")
         
+        # Log final counts before saving
+        logger.info(f"Before saving: {len(self.unique_strings)} unique strings, "
+                   f"{len(self.string_counts)} string counts, "
+                   f"{len(self.field_hash_mapping)} field hash mappings")
+        
         # Save final results
         self._save_results()
         
@@ -189,9 +197,6 @@ class Preprocessor:
         
         return results
     
-    # The rest of the module remains the same...
-    # (This includes methods like _process_file, _process_chunk, etc.)
-    
     def _process_file(self, file_path):
         """
         Process a single CSV file.
@@ -203,21 +208,38 @@ class Preprocessor:
             int: Number of records processed
         """
         records_processed = 0
+        logger.info(f"Processing file: {file_path}")
         
-        # Use pandas to read CSV in chunks
-        for chunk in pd.read_csv(
-            file_path,
-            chunksize=self.csv_chunk_size,
-            low_memory=False,
-            dtype=str,  # Read all columns as strings
-            na_values=self.null_values,
-            keep_default_na=True
-        ):
-            # Process chunk in parallel
-            chunk_records = self._process_chunk(chunk)
-            records_processed += chunk_records
-        
-        return records_processed
+        try:
+            # Use pandas to read CSV in chunks
+            for chunk_idx, chunk in enumerate(pd.read_csv(
+                file_path,
+                chunksize=self.csv_chunk_size,
+                low_memory=False,
+                dtype=str,  # Read all columns as strings
+                na_values=self.null_values,
+                keep_default_na=True
+            )):
+                # Log chunk information
+                logger.debug(f"Processing chunk {chunk_idx}: {len(chunk)} records")
+                
+                # Process chunk in parallel
+                chunk_records = self._process_chunk(chunk)
+                records_processed += chunk_records
+                
+                # Log progress
+                if chunk_idx % 10 == 0:
+                    logger.info(f"Processed {records_processed} records, " 
+                               f"Found {len(self.unique_strings)} unique strings")
+            
+            logger.info(f"Completed file {file_path}: {records_processed} records processed")
+            return records_processed
+            
+        except Exception as e:
+            logger.error(f"Error processing file {file_path}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return 0
     
     def _process_chunk(self, chunk):
         """
@@ -249,12 +271,33 @@ class Preprocessor:
             # Process results as they complete
             for future in as_completed(futures):
                 try:
-                    record_id, field_hashes = future.result()
+                    record_id, field_hashes, local_unique_strings, local_string_counts, local_field_hash_mapping = future.result()
                     
                     # Store record field hashes
                     self.record_field_hashes[record_id] = field_hashes
+                    
+                    # Update unique strings
+                    self.unique_strings.update(local_unique_strings)
+                    
+                    # Update string counts
+                    for hash_value, count in local_string_counts.items():
+                        if hash_value not in self.string_counts:
+                            self.string_counts[hash_value] = 0
+                        self.string_counts[hash_value] += count
+                    
+                    # Update field hash mapping
+                    for hash_value, fields in local_field_hash_mapping.items():
+                        if hash_value not in self.field_hash_mapping:
+                            self.field_hash_mapping[hash_value] = {}
+                        for field, count in fields.items():
+                            if field not in self.field_hash_mapping[hash_value]:
+                                self.field_hash_mapping[hash_value][field] = 0
+                            self.field_hash_mapping[hash_value][field] += count
+                
                 except Exception as e:
                     logger.error(f"Error processing record: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
         
         return len(chunk)
     
@@ -267,7 +310,7 @@ class Preprocessor:
             idx (int): Record index
             
         Returns:
-            tuple: (record_id, field_hashes)
+            tuple: (record_id, field_hashes, local_unique_strings, local_string_counts, local_field_hash_mapping)
         """
         # Extract record ID
         record_id = record.get('personId')
@@ -275,21 +318,26 @@ class Preprocessor:
             # Generate a unique ID if not present
             record_id = f"record_{idx}"
         
-        # Initialize field hashes
+        # Initialize field hashes and local dictionaries
         field_hashes = {}
+        local_unique_strings = {}
+        local_string_counts = {}
+        local_field_hash_mapping = {}
         
         # Process composite field if present
         composite_value = record.get('composite')
         if composite_value and composite_value not in self.null_values:
-            composite_hash = self._process_field_value('composite', composite_value)
+            composite_hash, updates = self._process_field_value('composite', composite_value)
             field_hashes['composite'] = composite_hash
+            self._merge_updates(updates, local_unique_strings, local_string_counts, local_field_hash_mapping)
         
         # Process other fields
         for field in ['person', 'title', 'provision', 'subjects']:
             field_value = record.get(field)
             if field_value and field_value not in self.null_values:
-                field_hash = self._process_field_value(field, field_value)
+                field_hash, updates = self._process_field_value(field, field_value)
                 field_hashes[field] = field_hash
+                self._merge_updates(updates, local_unique_strings, local_string_counts, local_field_hash_mapping)
             else:
                 field_hashes[field] = "NULL"
         
@@ -299,14 +347,40 @@ class Preprocessor:
             roles_hash = compute_string_hash(roles_value)
             field_hashes['roles'] = roles_hash
             
-            # Update unique strings and counts for roles
-            if roles_hash not in self.unique_strings:
-                self.unique_strings[roles_hash] = roles_value
-                self.string_counts[roles_hash] = 0
-            
-            self.string_counts[roles_hash] += 1
+            # Update local dictionaries for roles
+            local_unique_strings[roles_hash] = roles_value
+            local_string_counts[roles_hash] = 1
         
-        return record_id, field_hashes
+        return record_id, field_hashes, local_unique_strings, local_string_counts, local_field_hash_mapping
+    
+    def _merge_updates(self, updates, local_unique_strings, local_string_counts, local_field_hash_mapping):
+        """
+        Helper method to merge updates from field processing.
+        
+        Args:
+            updates (dict): Dictionary of updates
+            local_unique_strings (dict): Local unique strings dictionary
+            local_string_counts (dict): Local string counts dictionary
+            local_field_hash_mapping (dict): Local field hash mapping dictionary
+        """
+        if 'unique_strings' in updates:
+            local_unique_strings.update(updates['unique_strings'])
+        
+        if 'string_counts' in updates:
+            for hash_value, count in updates['string_counts'].items():
+                if hash_value not in local_string_counts:
+                    local_string_counts[hash_value] = 0
+                local_string_counts[hash_value] += count
+        
+        if 'field_hash_mapping' in updates:
+            for hash_value, field_counts in updates['field_hash_mapping'].items():
+                if hash_value not in local_field_hash_mapping:
+                    local_field_hash_mapping[hash_value] = {}
+                
+                for field, count in field_counts.items():
+                    if field not in local_field_hash_mapping[hash_value]:
+                        local_field_hash_mapping[hash_value][field] = 0
+                    local_field_hash_mapping[hash_value][field] += count
     
     def _process_field_value(self, field, value):
         """
@@ -317,7 +391,7 @@ class Preprocessor:
             value (str): Field value
             
         Returns:
-            str: Hash of field value
+            tuple: (hash_value, updates)
         """
         # Normalize string if enabled
         if self.normalize_strings:
@@ -326,24 +400,16 @@ class Preprocessor:
         # Compute hash
         hash_value = compute_string_hash(value)
         
-        # Update unique strings
-        if hash_value not in self.unique_strings:
-            self.unique_strings[hash_value] = value
-            self.string_counts[hash_value] = 0
+        # Return updates instead of modifying global dictionaries
+        updates = {
+            'unique_strings': {hash_value: value},
+            'string_counts': {hash_value: 1},
+            'field_hash_mapping': {
+                hash_value: {field: 1}
+            }
+        }
         
-        # Update string counts
-        self.string_counts[hash_value] += 1
-        
-        # Update field hash mapping
-        if hash_value not in self.field_hash_mapping:
-            self.field_hash_mapping[hash_value] = {}
-        
-        if field not in self.field_hash_mapping[hash_value]:
-            self.field_hash_mapping[hash_value][field] = 0
-        
-        self.field_hash_mapping[hash_value][field] += 1
-        
-        return hash_value
+        return hash_value, updates
     
     def _normalize_string(self, text):
         """
@@ -369,6 +435,11 @@ class Preprocessor:
         """
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Log counts before saving
+        logger.info(f"Saving results: {len(self.unique_strings)} unique strings, " 
+                   f"{len(self.field_hash_mapping)} field mappings, "
+                   f"{len(self.record_field_hashes)} records")
         
         # For large datasets, use memory-mapped files
         if self.config['system']['mode'] == 'prod' or len(self.unique_strings) > 100000:
@@ -412,20 +483,6 @@ class Preprocessor:
             # Save string counts
             with open(self.output_dir / "string_counts.json", 'w') as f:
                 json.dump(self.string_counts, f, indent=2)
-            
-            # Save samples for inspection
-            sample_unique_strings = dict(list(self.unique_strings.items())[:1000])
-            sample_record_field_hashes = dict(list(self.record_field_hashes.items())[:1000])
-            sample_field_hash_mapping = dict(list(self.field_hash_mapping.items())[:1000])
-            
-            with open(self.output_dir / "unique_strings_sample.json", 'w') as f:
-                json.dump(sample_unique_strings, f, indent=2)
-            
-            with open(self.output_dir / "record_field_hashes_sample.json", 'w') as f:
-                json.dump(sample_record_field_hashes, f, indent=2)
-            
-            with open(self.output_dir / "field_hash_mapping_sample.json", 'w') as f:
-                json.dump(sample_field_hash_mapping, f, indent=2)
         else:
             # For small datasets, save as JSON
             with open(self.output_dir / "unique_strings.json", 'w') as f:
