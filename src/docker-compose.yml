@@ -1,0 +1,95 @@
+version: '3.4'
+services:
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 20000
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: ''
+      CLUSTER_HOSTNAME: 'node1'
+      GRPC_PORT: "50051"            
+      PERSISTENCE_LSM_ACCESS_STRATEGY: "mmap"  # improves throughput for read-heavy workloads      
+      VECTOR_INDEX_TYPE: "hnsw"
+      VECTOR_INDEX_DISTANCE: "cosine"
+      VECTOR_INDEX_EFCONSTRUCTION: 128  # increase search quality during index construction
+      VECTOR_INDEX_EF: 128  # increase search quality during querying
+      VECTOR_INDEX_MAXCONNECTIONS: 64  # increase graph connectivity
+      LIMIT_RESOURCES_MEM: ${MEM_LIMIT:-"4Gi"}  # adjust based on available memory
+      LIMIT_RESOURCES_CPU: ${CPU_LIMIT:-"2"}  # CPU limit
+      DISK_USE_WARN_PERCENTAGE: 90
+      AUTO_SCHEMA_ENABLED: "false"  # disable auto schema for improved stability
+      PERSISTENCE_SNAPSHOT_INTERVAL: "30m"  # More frequent snapshots
+      LOG_LEVEL: "info"
+
+      PROMETHEUS_MONITORING_ENABLED: 'true'
+      GODEBUG: 'netdns=go'
+      # Increase limits for production use
+      LIMIT_RESOURCES: 'true'
+      QUERY_MAXIMUM_RESULTS: 1000000
+      QUERY_MAXIMUM_COUNT_RESULTS: 1000000
+      QUERY_MAXIMUM_AGGREGATE_DISTANCE: 1000000
+      # Performance tuning
+      QUERY_DEFAULTS_VECTOR_SEARCH_COUNT: 1000
+      QUERY_MAXIMUM_VECTOR_SEARCH_COUNT: 10000
+      BATCH_WORKERS: 4
+      GOROUTINES_THRESHOLD: 10000
+      # HNSW default settings
+      DEFAULT_VECTORIZER_HNSW_EF: 128
+      DEFAULT_VECTORIZER_HNSW_MAXCONNECTIONS: 64
+      DEFAULT_VECTORIZER_HNSW_EFCONSTRUCTION: 128
+      DEFAULT_VECTORIZER_HNSW_DISTANCEMETHOD: "cosine"
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    depends_on:
+      - weaviate
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  weaviate_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
