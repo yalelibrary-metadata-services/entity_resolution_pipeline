@@ -20,8 +20,9 @@ from tenacity import (
 )
 
 from src.utils import (
-    Timer, get_memory_usage, save_checkpoint, load_checkpoint, MMapDict
+    Timer, get_memory_usage, save_checkpoint, load_checkpoint
 )
+from src.mmap_dict import MMapDict
 
 logger = logging.getLogger(__name__)
 
