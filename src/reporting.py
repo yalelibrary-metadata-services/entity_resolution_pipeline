@@ -1,7 +1,8 @@
 """
 Reporting module for entity resolution pipeline.
 
-This module generates reports and visualizations for entity resolution results.
+This module generates reports and visualizations for entity resolution results
+with enhanced feature distribution visualizations and proper normalization.
 """
 
 import os
@@ -15,6 +16,7 @@ from pathlib import Path
 from sklearn.metrics import (
     precision_recall_curve, roc_curve, auc, confusion_matrix
 )
+from matplotlib.colors import LinearSegmentedColormap
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,7 @@ class ReportGenerator:
     Features:
     - Classification metrics reporting
     - Feature importance visualization
+    - Feature distribution visualization
     - Test results analysis and visualization
     - Cluster statistics reporting
     - Confusion matrix visualization
@@ -70,6 +73,29 @@ class ReportGenerator:
         generated_reports = []
         generated_figures = []
         
+        # Create output directories if they don't exist
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
+        self.figures_dir.mkdir(parents=True, exist_ok=True)
+        
+        logger.info(f"Reports will be saved to {self.reports_dir}")
+        logger.info(f"Figures will be saved to {self.figures_dir}")
+        
+        # Normalize features in test results
+        test_results_path = self.output_dir / "test_results_detailed.csv"
+        if test_results_path.exists():
+            normalized_path, normalized_df = self._normalize_features_for_reporting(test_results_path)
+            logger.info(f"Normalized test results saved to {normalized_path}")
+            
+            # Create enhanced feature distribution plots
+            logger.info("Generating enhanced feature distribution visualizations...")
+            top_features = self._create_feature_distribution_plots(normalized_df, top_n=15)
+            logger.info(f"Generated distribution plots for top {len(top_features)} features")
+            
+            # Track generated figures
+            for feature in top_features:
+                generated_figures.append(str(self.figures_dir / f'feature_dist_{feature}.png'))
+            generated_figures.append(str(self.figures_dir / 'feature_separation_power.png'))
+        
         # Generate classification metrics report
         if self.generate_metrics_report:
             metrics_report = self._generate_metrics_report()
@@ -104,6 +130,14 @@ class ReportGenerator:
             figures = self._generate_visualizations()
             generated_figures.extend(figures)
         
+        # Check that reports were actually created
+        report_files = list(self.reports_dir.glob("*.json")) + list(self.reports_dir.glob("*.md"))
+        figure_files = list(self.figures_dir.glob("*.png"))
+        
+        logger.info(f"Generated {len(report_files)} report files and {len(figure_files)} figures")
+        for file in report_files[:5]:  # Log the first few files
+            logger.info(f"  - {file.name} ({file.stat().st_size} bytes)")
+        
         results = {
             'reports': generated_reports,
             'figures': generated_figures
@@ -115,6 +149,149 @@ class ReportGenerator:
         )
         
         return results
+    
+    def _normalize_features_for_reporting(self, csv_path):
+        """
+        Normalize all features in test results to 0-1 similarity range.
+        
+        Args:
+            csv_path (Path): Path to test results CSV
+            
+        Returns:
+            tuple: (normalized_path, normalized_df)
+        """
+        # Load the test results CSV
+        df = pd.read_csv(csv_path)
+        
+        # Identify feature columns (exclude metadata columns)
+        metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
+                         'predicted_label', 'confidence', 'correct']
+        feature_cols = [col for col in df.columns if col not in metadata_cols]
+        
+        # Process each feature column
+        for col in feature_cols:
+            # Check if column contains negative values
+            if df[col].min() < 0:
+                if df[col].min() >= -1 and df[col].max() <= 1:
+                    # If values are in [-1, 1] range (like correlations), rescale to [0, 1]
+                    logger.info(f"Normalizing {col} from [-1, 1] to [0, 1] range")
+                    df[col] = (df[col] + 1) / 2
+                else:
+                    # For other ranges, use min-max scaling
+                    logger.info(f"Applying min-max scaling to {col}")
+                    min_val = df[col].min()
+                    max_val = df[col].max()
+                    df[col] = (df[col] - min_val) / (max_val - min_val)
+        
+        # Save normalized version
+        normalized_path = str(csv_path).replace('.csv', '_normalized.csv')
+        df.to_csv(normalized_path, index=False)
+        
+        return normalized_path, df
+    
+    def _create_feature_distribution_plots(self, df, top_n=10):
+        """
+        Create feature distribution plots showing separation between classes.
+        
+        Args:
+            df (DataFrame): Normalized test results dataframe
+            top_n (int): Number of top features to visualize
+            
+        Returns:
+            list: Top features
+        """
+        # Get feature columns
+        metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
+                         'predicted_label', 'confidence', 'correct']
+        feature_cols = [col for col in df.columns if col not in metadata_cols]
+        
+        # Calculate feature importance based on class separation
+        feature_separation = {}
+        for col in feature_cols:
+            pos_mean = df[df['true_label'] == 1][col].mean()
+            neg_mean = df[df['true_label'] == 0][col].mean()
+            separation = abs(pos_mean - neg_mean)
+            feature_separation[col] = {
+                'separation': separation,
+                'pos_mean': pos_mean,
+                'neg_mean': neg_mean
+            }
+        
+        # Sort features by separation
+        sorted_features = sorted(feature_separation.items(), 
+                                key=lambda x: x[1]['separation'], 
+                                reverse=True)
+        
+        # Select top N features
+        top_features = [f[0] for f in sorted_features[:top_n]]
+        
+        # Create custom colormaps
+        pos_cmap = LinearSegmentedColormap.from_list('positive', ['#c8e6c9', '#2e7d32'])
+        neg_cmap = LinearSegmentedColormap.from_list('negative', ['#ffcdd2', '#c62828'])
+        
+        # Create plots for each feature
+        for feature in top_features:
+            plt.figure(figsize=(12, 8))
+            
+            # Get data and statistics
+            pos_data = df[df['true_label'] == 1][feature]
+            neg_data = df[df['true_label'] == 0][feature]
+            pos_mean = feature_separation[feature]['pos_mean']
+            neg_mean = feature_separation[feature]['neg_mean']
+            separation = feature_separation[feature]['separation']
+            
+            # Plot histograms with KDE
+            sns.histplot(pos_data, kde=True, stat='density', alpha=0.6, 
+                        color='#4caf50', label='Matching Entities', 
+                        edgecolor='white', linewidth=0.5)
+            sns.histplot(neg_data, kde=True, stat='density', alpha=0.6, 
+                        color='#f44336', label='Non-matching Entities', 
+                        edgecolor='white', linewidth=0.5)
+            
+            # Add mean lines
+            plt.axvline(pos_mean, color='#2e7d32', linestyle='--', 
+                       label=f'Match Mean: {pos_mean:.4f}')
+            plt.axvline(neg_mean, color='#c62828', linestyle='--', 
+                       label=f'Non-match Mean: {neg_mean:.4f}')
+            
+            # Styling
+            plt.title(f'Distribution of {feature} by Class (Separation: {separation:.4f})', 
+                     fontsize=16)
+            plt.xlabel('Feature Value', fontsize=14)
+            plt.ylabel('Density', fontsize=14)
+            plt.grid(alpha=0.3)
+            plt.legend(fontsize=12)
+            plt.tight_layout()
+            
+            # Save figure
+            plt.savefig(self.figures_dir / f'feature_dist_{feature}.png', dpi=300, bbox_inches='tight')
+            plt.close()
+        
+        # Create a summary plot of feature separation
+        plt.figure(figsize=(14, 8))
+        separations = [feature_separation[f]['separation'] for f in top_features]
+        colors = plt.cm.viridis(np.linspace(0, 0.8, len(top_features)))
+        
+        # Create barplot
+        bars = plt.barh(top_features, separations, color=colors)
+        
+        # Add value labels
+        for bar in bars:
+            width = bar.get_width()
+            plt.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
+                    f'{width:.4f}', ha='left', va='center', fontsize=10)
+        
+        plt.title('Feature Separation Power (Higher = Better Class Separation)', fontsize=16)
+        plt.xlabel('Mean Absolute Difference Between Classes', fontsize=14)
+        plt.ylabel('Feature', fontsize=14)
+        plt.grid(axis='x', alpha=0.3)
+        plt.tight_layout()
+        
+        # Save figure
+        plt.savefig(self.figures_dir / 'feature_separation_power.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        return top_features
     
     def _generate_metrics_report(self):
         """
@@ -310,7 +487,7 @@ class ReportGenerator:
                 
                 # Bar plot of feature importance
                 plt.subplot(2, 1, 1)
-                sns.barplot(x='importance', y='feature', data=df.head(15), palette='viridis')
+                sns.barplot(x='importance', y='feature', data=df.head(15), hue='feature', legend=False, palette='viridis')
                 plt.title('Top 15 Features by Importance')
                 plt.xlabel('Importance')
                 plt.ylabel('Feature')
@@ -318,7 +495,7 @@ class ReportGenerator:
                 
                 # Bar plot of feature weights
                 plt.subplot(2, 1, 2)
-                sns.barplot(x='weight', y='feature', data=df.head(15), palette='viridis')
+                sns.barplot(x='weight', y='feature', data=df.head(15), hue='feature', legend=False, palette='viridis')
                 plt.title('Top 15 Features by Weight')
                 plt.xlabel('Weight')
                 plt.ylabel('Feature')
@@ -332,7 +509,7 @@ class ReportGenerator:
                 # Grouped by feature type
                 plt.figure(figsize=(10, 6))
                 feature_type_df = df.groupby('feature_type')['importance'].sum().reset_index().sort_values('importance', ascending=False)
-                sns.barplot(x='importance', y='feature_type', data=feature_type_df, palette='viridis')
+                sns.barplot(x='importance', y='feature_type', data=feature_type_df, hue='feature_type', legend=False, palette='viridis')
                 plt.title('Feature Importance by Type')
                 plt.xlabel('Total Importance')
                 plt.ylabel('Feature Type')
@@ -495,8 +672,12 @@ class ReportGenerator:
             # Generate visualizations
             if self.visualization_enabled:
                 try:
+                    # Normalize features before visualizing
+                    normalized_path, normalized_df = self._normalize_features_for_reporting(test_results_path)
+                    test_df = normalized_df  # Use normalized data for visualizations
+                    
                     # Confusion matrix visualization
-                    plt.figure(figsize=(8, 6))
+                    plt.figure(figsize=(10, 8))
                     cm = confusion_matrix(test_df['true_label'], test_df['predicted_label'])
                     sns.heatmap(
                         cm,
@@ -504,11 +685,13 @@ class ReportGenerator:
                         fmt='d',
                         cmap='Blues',
                         xticklabels=['Non-Match', 'Match'],
-                        yticklabels=['Non-Match', 'Match']
+                        yticklabels=['Non-Match', 'Match'],
+                        annot_kws={'size': 14},
+                        cbar_kws={'label': 'Count'}
                     )
-                    plt.title('Confusion Matrix')
-                    plt.xlabel('Predicted Label')
-                    plt.ylabel('True Label')
+                    plt.title('Confusion Matrix', fontsize=16)
+                    plt.xlabel('Predicted Label', fontsize=14)
+                    plt.ylabel('True Label', fontsize=14)
                     
                     # Save figure
                     fig_path = self.figures_dir / "test_confusion_matrix.png"
@@ -516,19 +699,20 @@ class ReportGenerator:
                     plt.close()
                     
                     # Confidence distribution by prediction correctness
-                    plt.figure(figsize=(10, 6))
+                    plt.figure(figsize=(12, 8))
                     sns.histplot(
                         data=test_df,
                         x='confidence',
                         hue='correct',
                         multiple='stack',
                         bins=20,
-                        palette=['red', 'green']
+                        palette=['#EF5350', '#66BB6A']
                     )
-                    plt.title('Confidence Distribution by Prediction Correctness')
-                    plt.xlabel('Confidence')
-                    plt.ylabel('Count')
-                    plt.legend(['Incorrect', 'Correct'])
+                    plt.title('Confidence Distribution by Prediction Correctness', fontsize=16)
+                    plt.xlabel('Confidence', fontsize=14)
+                    plt.ylabel('Count', fontsize=14)
+                    plt.legend(['Incorrect', 'Correct'], fontsize=12)
+                    plt.grid(alpha=0.3)
                     
                     # Save figure
                     fig_path = self.figures_dir / "confidence_by_correctness.png"
@@ -536,19 +720,21 @@ class ReportGenerator:
                     plt.close()
                     
                     # Confidence distribution by true label
-                    plt.figure(figsize=(10, 6))
+                    plt.figure(figsize=(12, 8))
                     sns.histplot(
                         data=test_df,
                         x='confidence',
                         hue='true_label',
                         multiple='layer',
                         bins=20,
-                        palette=['blue', 'orange']
+                        palette=['#42A5F5', '#FFA726'],
+                        alpha=0.7
                     )
-                    plt.title('Confidence Distribution by True Label')
-                    plt.xlabel('Confidence')
-                    plt.ylabel('Count')
-                    plt.legend(['Non-Match', 'Match'])
+                    plt.title('Confidence Distribution by True Label', fontsize=16)
+                    plt.xlabel('Confidence', fontsize=14)
+                    plt.ylabel('Count', fontsize=14)
+                    plt.legend(['Non-Match', 'Match'], fontsize=12)
+                    plt.grid(alpha=0.3)
                     
                     # Save figure
                     fig_path = self.figures_dir / "confidence_by_true_label.png"
@@ -564,16 +750,19 @@ class ReportGenerator:
                         
                         # Plot top 5 features
                         for feature in feature_cols[:5]:
-                            plt.figure(figsize=(10, 6))
+                            plt.figure(figsize=(12, 8))
                             sns.boxplot(
                                 data=test_df,
                                 x='prediction_group',
                                 y=feature,
-                                order=['Correct', 'False Positive', 'False Negative']
+                                order=['Correct', 'False Positive', 'False Negative'],
+                                palette={'Correct': '#66BB6A', 'False Positive': '#FF7043', 'False Negative': '#42A5F5'},
+                                orientation='vertical'
                             )
-                            plt.title(f'Distribution of {feature} by Prediction Result')
-                            plt.xlabel('Prediction Result')
-                            plt.ylabel(feature)
+                            plt.title(f'Distribution of {feature} by Prediction Result', fontsize=16)
+                            plt.xlabel('Prediction Result', fontsize=14)
+                            plt.ylabel(feature, fontsize=14)
+                            plt.grid(alpha=0.3)
                             
                             # Save figure
                             fig_path = self.figures_dir / f"feature_{feature}_by_result.png"
@@ -723,30 +912,47 @@ class ReportGenerator:
         if self.visualization_enabled:
             try:
                 # Cluster size distribution
-                plt.figure(figsize=(10, 6))
+                plt.figure(figsize=(12, 8))
                 
                 # Prepare data for visualization
                 size_ranges = list(stats['cluster_size_distribution'].keys())
                 counts = list(stats['cluster_size_distribution'].values())
                 
-                # Bar plot
-                plt.bar(size_ranges, counts, color='skyblue')
-                plt.title('Cluster Size Distribution')
-                plt.xlabel('Cluster Size')
-                plt.ylabel('Count')
+                # Bar plot with modern colors
+                plt.bar(size_ranges, counts, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(size_ranges))))
+                plt.title('Cluster Size Distribution', fontsize=16)
+                plt.xlabel('Cluster Size', fontsize=14)
+                plt.ylabel('Count', fontsize=14)
                 plt.grid(axis='y', linestyle='--', alpha=0.7)
+                
+                # Add value labels
+                for i, count in enumerate(counts):
+                    plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
                 
                 # Save figure
                 fig_path = self.figures_dir / "cluster_size_distribution.png"
                 plt.savefig(fig_path, dpi=300, bbox_inches='tight')
                 plt.close()
                 
-                # Histogram of cluster sizes
-                plt.figure(figsize=(10, 6))
-                plt.hist(clusters_df['cluster_size'], bins=20, color='skyblue', edgecolor='black')
-                plt.title('Histogram of Cluster Sizes')
-                plt.xlabel('Cluster Size')
-                plt.ylabel('Frequency')
+                # Histogram of cluster sizes (more detailed view)
+                plt.figure(figsize=(12, 8))
+                actual_sizes = clusters_df['cluster_size'].value_counts().reset_index()
+                actual_sizes.columns = ['size', 'count']
+                actual_sizes = actual_sizes.sort_values('size')
+                
+                # Use log scale if there's high variance in cluster sizes
+                if stats['max_cluster_size'] / stats['min_cluster_size'] > 20:
+                    plt.bar(actual_sizes['size'], actual_sizes['count'], 
+                           color=plt.cm.viridis(np.linspace(0.2, 0.8, len(actual_sizes))))
+                    plt.xscale('log')
+                    plt.title('Histogram of Cluster Sizes (Log Scale)', fontsize=16)
+                else:
+                    plt.bar(actual_sizes['size'], actual_sizes['count'],
+                           color=plt.cm.viridis(np.linspace(0.2, 0.8, len(actual_sizes))))
+                    plt.title('Histogram of Cluster Sizes', fontsize=16)
+                
+                plt.xlabel('Cluster Size', fontsize=14)
+                plt.ylabel('Frequency', fontsize=14)
                 plt.grid(linestyle='--', alpha=0.7)
                 
                 # Save figure
@@ -754,17 +960,22 @@ class ReportGenerator:
                 plt.savefig(fig_path, dpi=300, bbox_inches='tight')
                 plt.close()
                 
-                # Top 10 largest clusters
-                plt.figure(figsize=(12, 6))
+                # Top 10 largest clusters visualization
+                plt.figure(figsize=(14, 8))
                 top_clusters = clusters_df.groupby('cluster_id').size().reset_index(name='entity_count')
                 top_clusters = top_clusters.sort_values('entity_count', ascending=False).head(10)
                 
-                plt.bar(top_clusters['cluster_id'].astype(str), top_clusters['entity_count'], color='skyblue')
-                plt.title('Top 10 Largest Clusters')
-                plt.xlabel('Cluster ID')
-                plt.ylabel('Entity Count')
+                plt.bar(top_clusters['cluster_id'].astype(str), top_clusters['entity_count'], 
+                       color=plt.cm.plasma(np.linspace(0.2, 0.8, len(top_clusters))))
+                plt.title('Top 10 Largest Clusters', fontsize=16)
+                plt.xlabel('Cluster ID', fontsize=14)
+                plt.ylabel('Entity Count', fontsize=14)
                 plt.xticks(rotation=45)
                 plt.grid(axis='y', linestyle='--', alpha=0.7)
+                
+                # Add value labels
+                for i, count in enumerate(top_clusters['entity_count']):
+                    plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
                 
                 # Save figure
                 fig_path = self.figures_dir / "top_10_largest_clusters.png"
@@ -830,22 +1041,27 @@ class ReportGenerator:
             fpr, tpr, thresholds = roc_curve(test_df['true_label'], test_df['confidence'])
             roc_auc = auc(fpr, tpr)
             
-            # Plot ROC curve
-            plt.figure(figsize=(10, 8))
-            plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            # Plot ROC curve with enhanced styling
+            plt.figure(figsize=(12, 10))
+            plt.plot(fpr, tpr, color='#1976D2', lw=3, label=f'ROC curve (area = {roc_auc:.2f})')
+            plt.plot([0, 1], [0, 1], color='#455A64', lw=2, linestyle='--')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
-            plt.title('Receiver Operating Characteristic (ROC) Curve')
-            plt.legend(loc="lower right")
+            plt.xlabel('False Positive Rate', fontsize=14)
+            plt.ylabel('True Positive Rate', fontsize=14)
+            plt.title('Receiver Operating Characteristic (ROC) Curve', fontsize=16)
+            plt.legend(loc="lower right", fontsize=12)
             plt.grid(linestyle='--', alpha=0.7)
             
             # Add decision threshold point
             decision_idx = np.argmin(np.abs(thresholds - self.config['classification']['decision_threshold']))
-            plt.scatter(fpr[decision_idx], tpr[decision_idx], color='red', s=100, label=f'Decision Threshold ({self.config["classification"]["decision_threshold"]:.2f})')
-            plt.legend(loc="lower right")
+            plt.scatter(fpr[decision_idx], tpr[decision_idx], color='red', s=100, 
+                       label=f'Decision Threshold ({self.config["classification"]["decision_threshold"]:.2f})')
+            plt.legend(loc="lower right", fontsize=12)
+            
+            # Add labels at key points
+            plt.annotate('Perfect Classification', xy=(0, 1), xytext=(0.2, 0.9),
+                        arrowprops=dict(facecolor='black', shrink=0.05, width=1.5, headwidth=8))
             
             # Save figure
             fig_path = self.figures_dir / "roc_curve.png"
@@ -886,16 +1102,20 @@ class ReportGenerator:
             best_threshold = thresholds[best_threshold_idx]
             best_f1 = f1_scores[best_threshold_idx]
             
-            # Plot precision-recall curve
-            plt.figure(figsize=(10, 8))
-            plt.plot(recall, precision, color='blue', lw=2, label='Precision-Recall curve')
-            plt.axhline(y=0.5, color='navy', linestyle='--', label='Baseline (50% precision)')
+            # Calculate baseline performance
+            baseline = test_df['true_label'].mean()
+            
+            # Plot precision-recall curve with enhanced styling
+            plt.figure(figsize=(12, 10))
+            plt.plot(recall, precision, color='#7B1FA2', lw=3, label='Precision-Recall curve')
+            plt.axhline(y=baseline, color='#FF5722', linestyle='--', 
+                       label=f'Baseline precision: {baseline:.2f}')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
-            plt.xlabel('Recall')
-            plt.ylabel('Precision')
-            plt.title('Precision-Recall Curve')
-            plt.legend(loc="lower left")
+            plt.xlabel('Recall', fontsize=14)
+            plt.ylabel('Precision', fontsize=14)
+            plt.title('Precision-Recall Curve', fontsize=16)
+            plt.legend(loc="lower left", fontsize=12)
             plt.grid(linestyle='--', alpha=0.7)
             
             # Add decision threshold point
@@ -903,14 +1123,14 @@ class ReportGenerator:
             # Find closest threshold
             if len(thresholds) > 0:
                 decision_idx = min(range(len(thresholds)), key=lambda i: abs(thresholds[i] - decision_threshold))
-                plt.scatter(recall[decision_idx], precision[decision_idx], color='red', s=100, 
-                            label=f'Decision Threshold ({decision_threshold:.2f})')
+                plt.scatter(recall[decision_idx], precision[decision_idx], color='#E91E63', s=100, 
+                           label=f'Decision Threshold ({decision_threshold:.2f})')
             
             # Add best F1 threshold point
-            plt.scatter(recall[best_threshold_idx], precision[best_threshold_idx], color='green', s=100, 
-                        label=f'Best F1 Threshold ({best_threshold:.2f}, F1={best_f1:.2f})')
+            plt.scatter(recall[best_threshold_idx], precision[best_threshold_idx], color='#4CAF50', s=100, 
+                       label=f'Best F1 Threshold ({best_threshold:.2f}, F1={best_f1:.2f})')
             
-            plt.legend(loc="lower left")
+            plt.legend(loc="lower left", fontsize=12)
             
             # Save figure
             fig_path = self.figures_dir / "precision_recall_curve.png"
@@ -920,7 +1140,7 @@ class ReportGenerator:
             logger.info(f"Precision-recall curve visualization saved to {fig_path}")
             
             # Also create a threshold analysis plot
-            plt.figure(figsize=(12, 8))
+            plt.figure(figsize=(14, 10))
             
             # Only include valid indices where precision and recall are defined
             valid_indices = ~np.isnan(f1_scores)
@@ -931,22 +1151,22 @@ class ReportGenerator:
             
             if len(valid_thresholds) > 0:
                 # Plot precision, recall, and F1 score vs threshold
-                plt.plot(valid_thresholds, valid_precision, 'b-', label='Precision')
-                plt.plot(valid_thresholds, valid_recall, 'g-', label='Recall')
-                plt.plot(valid_thresholds, valid_f1_scores, 'r-', label='F1 Score')
+                plt.plot(valid_thresholds, valid_precision, 'b-', lw=3, label='Precision')
+                plt.plot(valid_thresholds, valid_recall, 'g-', lw=3, label='Recall')
+                plt.plot(valid_thresholds, valid_f1_scores, 'r-', lw=3, label='F1 Score')
                 
                 # Add decision threshold line
-                plt.axvline(x=decision_threshold, color='black', linestyle='--', 
-                            label=f'Decision Threshold ({decision_threshold:.2f})')
+                plt.axvline(x=decision_threshold, color='#E91E63', linestyle='--', lw=2, 
+                           label=f'Decision Threshold ({decision_threshold:.2f})')
                 
                 # Add best F1 threshold line
-                plt.axvline(x=best_threshold, color='purple', linestyle='--', 
-                            label=f'Best F1 Threshold ({best_threshold:.2f})')
+                plt.axvline(x=best_threshold, color='#4CAF50', linestyle='--', lw=2, 
+                           label=f'Best F1 Threshold ({best_threshold:.2f})')
                 
-                plt.xlabel('Threshold')
-                plt.ylabel('Score')
-                plt.title('Precision, Recall, and F1 Score vs Threshold')
-                plt.legend(loc="best")
+                plt.xlabel('Threshold', fontsize=14)
+                plt.ylabel('Score', fontsize=14)
+                plt.title('Precision, Recall, and F1 Score vs Threshold', fontsize=16)
+                plt.legend(loc="best", fontsize=12)
                 plt.grid(linestyle='--', alpha=0.7)
                 
                 # Save figure
@@ -955,6 +1175,8 @@ class ReportGenerator:
                 plt.close()
                 
                 logger.info(f"Threshold analysis visualization saved to {threshold_fig_path}")
+                figure_paths = [str(fig_path), str(threshold_fig_path)]
+                return figure_paths
             
             return str(fig_path)
         
@@ -988,21 +1210,29 @@ class ReportGenerator:
             else:
                 pipeline_results = {}
             
-            # Create summary visualization
-            plt.figure(figsize=(15, 10))
+            # Create summary visualization with enhanced styling
+            plt.figure(figsize=(16, 12))
             
-            # Create grid for subplots
-            gs = plt.GridSpec(2, 2)
+            # Create grid for subplots with more spacing
+            from matplotlib.gridspec import GridSpec
+            gs = GridSpec(2, 2, wspace=0.3, hspace=0.4)
             
             # Performance metrics
             ax1 = plt.subplot(gs[0, 0])
             metrics = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
             values = [classification_metrics.get(m, 0) for m in metrics]
             
-            ax1.bar(metrics, values, color='skyblue')
+            bars = ax1.bar(metrics, values, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(metrics))))
+            
+            # Add value labels
+            for bar in bars:
+                height = bar.get_height()
+                ax1.text(bar.get_x() + bar.get_width()/2., height + 0.02,
+                        f'{height:.3f}', ha='center', va='bottom', fontsize=12)
+            
             ax1.set_ylim(0, 1.1)
-            ax1.set_title('Classification Performance')
-            ax1.set_ylabel('Score')
+            ax1.set_title('Classification Performance', fontsize=16)
+            ax1.set_ylabel('Score', fontsize=14)
             ax1.grid(axis='y', linestyle='--', alpha=0.7)
             
             # Confusion matrix
@@ -1021,11 +1251,13 @@ class ReportGenerator:
                     cmap='Blues',
                     xticklabels=['Non-Match', 'Match'],
                     yticklabels=['Non-Match', 'Match'],
+                    annot_kws={'size': 14},
+                    cbar_kws={'label': 'Count'},
                     ax=ax2
                 )
-                ax2.set_title('Confusion Matrix')
-                ax2.set_xlabel('Predicted')
-                ax2.set_ylabel('Actual')
+                ax2.set_title('Confusion Matrix', fontsize=16)
+                ax2.set_xlabel('Predicted', fontsize=14)
+                ax2.set_ylabel('Actual', fontsize=14)
             
             # Pipeline statistics
             ax3 = plt.subplot(gs[1, 0])
@@ -1039,9 +1271,16 @@ class ReportGenerator:
                         durations.append(results['duration'])
             
             if stages:
-                ax3.barh(stages, durations, color='lightgreen')
-                ax3.set_title('Processing Time by Stage')
-                ax3.set_xlabel('Duration (seconds)')
+                bars = ax3.barh(stages, durations, color=plt.cm.plasma(np.linspace(0.2, 0.8, len(stages))))
+                
+                # Add value labels
+                for bar in bars:
+                    width = bar.get_width()
+                    ax3.text(width + 0.5, bar.get_y() + bar.get_height()/2,
+                            f'{width:.1f}s', ha='left', va='center', fontsize=12)
+                
+                ax3.set_title('Processing Time by Stage', fontsize=16)
+                ax3.set_xlabel('Duration (seconds)', fontsize=14)
                 ax3.grid(axis='x', linestyle='--', alpha=0.7)
             
             # Add feature importance
@@ -1052,17 +1291,25 @@ class ReportGenerator:
                 importance_values = [feature_importance[f]['importance'] for f in top_features]
                 
                 y_pos = np.arange(len(top_features))
-                ax4.barh(y_pos, importance_values, color='salmon')
+                bars = ax4.barh(y_pos, importance_values, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(top_features))))
+                
+                # Add value labels
+                for bar in bars:
+                    width = bar.get_width()
+                    ax4.text(width + 0.01, bar.get_y() + bar.get_height()/2,
+                            f'{width:.3f}', ha='left', va='center', fontsize=12)
+                
                 ax4.set_yticks(y_pos)
                 ax4.set_yticklabels(top_features)
                 ax4.invert_yaxis()  # Labels read top-to-bottom
-                ax4.set_title('Top 10 Feature Importance')
-                ax4.set_xlabel('Importance')
+                ax4.set_title('Top 10 Feature Importance', fontsize=16)
+                ax4.set_xlabel('Importance', fontsize=14)
+                ax4.grid(axis='x', linestyle='--', alpha=0.7)
             
             plt.tight_layout()
             
             # Add title
-            plt.suptitle('Entity Resolution Pipeline Summary', fontsize=16, y=1.02)
+            plt.suptitle('Entity Resolution Pipeline Summary', fontsize=20, y=1.02)
             
             # Save figure
             fig_path = self.figures_dir / "pipeline_summary.png"

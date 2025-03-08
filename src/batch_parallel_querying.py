@@ -275,20 +275,25 @@ class QueryEngine:
         
         try:
             with open(self.ground_truth_file, 'r') as f:
-                for line in f:
-                    parts = line.strip().split(',')
-                    if len(parts) >= 3:
-                        left_id = parts[0]
-                        right_id = parts[1]
-                        match = parts[2].lower() == 'true'
+                # Use CSV reader for proper header handling
+                import csv
+                reader = csv.reader(f)
+                header = next(reader)  # Skip the header row
+                
+                logger.info(f"Ground truth file header: {header}")
+                
+                for row in reader:
+                    if len(row) >= 3:
+                        left_id = row[0]
+                        right_id = row[1]
+                        match = row[2].lower() == 'true'
                         match_pairs.append((left_id, right_id, match))
-        except FileNotFoundError:
-            logger.error(f"Ground truth file not found: {self.ground_truth_file}")
         except Exception as e:
             logger.error(f"Error loading ground truth data: {e}")
             import traceback
             logger.error(traceback.format_exc())
         
+        logger.info(f"Loaded {len(match_pairs)} ground truth pairs")
         return match_pairs
     
     def _load_record_field_hashes(self):
@@ -366,22 +371,19 @@ class QueryEngine:
     def _get_vectors_for_records(self, record_ids, record_field_hashes):
         """
         Get vectors for a batch of records.
-        
-        Args:
-            record_ids (list): List of record IDs
-            record_field_hashes (dict): Record field hashes
-            
-        Returns:
-            dict: Dictionary of record ID -> field vectors
         """
         # Create a process pool for parallel processing
         with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-            # Submit jobs
+            # Submit jobs with parameters explicitly passed
             future_to_record = {
                 executor.submit(
-                    self._get_vectors_for_record,
+                    self._get_vectors_for_record_mp,  # Use static method
                     record_id,
-                    record_field_hashes.get(record_id, {})
+                    record_field_hashes.get(record_id, {}),
+                    self.weaviate_host,
+                    self.weaviate_port,
+                    self.collection_name,
+                    self.fields_to_embed
                 ): record_id
                 for record_id in record_ids
             }
@@ -393,14 +395,61 @@ class QueryEngine:
                 
                 try:
                     field_vectors = future.result()
-                    record_vectors[record_id] = field_vectors
+                    if field_vectors:
+                        record_vectors[record_id] = field_vectors
                 
                 except Exception as e:
                     logger.error(f"Error getting vectors for record {record_id}: {e}")
-                    import traceback
-                    logger.error(traceback.format_exc())
-        
+            
         return record_vectors
+    
+    @staticmethod
+    def _get_vectors_for_record_mp(record_id, field_hashes, weaviate_host, weaviate_port, 
+                                collection_name, fields_to_embed):
+        """
+        Static method version of _get_vectors_for_record for multiprocessing.
+        """
+        # Connect to Weaviate for this process
+        try:
+            client = weaviate.connect_to_local(
+                host=weaviate_host,
+                port=weaviate_port
+            )
+            
+            collection = client.collections.get(collection_name)
+            field_vectors = {}
+            
+            # Query vectors for each field
+            for field in fields_to_embed:
+                if field in field_hashes and field_hashes[field] != "NULL":
+                    hash_value = field_hashes[field]
+                    
+                    # Create filter
+                    hash_filter = Filter.by_property("hash").equal(hash_value)
+                    field_filter = Filter.by_property("field_type").equal(field)
+                    combined_filter = Filter.all_of([hash_filter, field_filter])
+                    
+                    # Execute search
+                    results = collection.query.fetch_objects(
+                        filters=combined_filter,
+                        limit=1,
+                        include_vector=True
+                    )
+                    
+                    if results.objects:
+                        vector = results.objects[0].vector.get(field)
+                        if vector:
+                            field_vectors[field] = vector
+            
+            # Close connection
+            client.close()
+            return field_vectors
+            
+        except Exception as e:
+            logger.error(f"Error getting vectors for record {record_id}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {}
     
     def _get_vectors_for_record(self, record_id, field_hashes):
         """

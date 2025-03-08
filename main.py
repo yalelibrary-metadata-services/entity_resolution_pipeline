@@ -33,8 +33,8 @@ def parse_args():
         default='all',
         choices=[
             'preprocessing', 'embedding', 'indexing', 'imputation', 
-            'ground_truth_queries', 'feature_engineering', 'classification',
-            'all'
+            'ground_truth_queries', 'feature_engineering', 'classification', 
+            'reporting', 'all'
         ],
         help='Pipeline stage to run'
     )
@@ -157,6 +157,8 @@ def main():
             pipeline.run_feature_engineering(resume=args.resume, checkpoint_path=args.checkpoint)
         elif args.stage == 'classification':
             pipeline.run_classification(resume=args.resume, checkpoint_path=args.checkpoint)
+        elif args.stage == 'reporting':
+            pipeline.run_reporting()
     
     # Log completion
     elapsed_time = time.time() - start_time

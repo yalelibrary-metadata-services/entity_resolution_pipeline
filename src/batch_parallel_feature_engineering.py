@@ -382,7 +382,8 @@ class FeatureEngineer:
     
     def _compute_pair_features(self, left_id, right_id, match, pair_data):
         """
-        Compute features for a single pair.
+        Compute features for a single pair, with proper normalization to ensure
+        all features represent similarity scores in the 0-1 range.
         
         Args:
             left_id (str): Left record ID
@@ -395,114 +396,135 @@ class FeatureEngineer:
         """
         pair_id = f"{left_id}_{right_id}"
         
-        # Initialize feature vector
+        # Initialize feature vector and labels
         features = {}
-        
-        # Initialize labels
         labels = {'match': match} if match is not None else {}
         
         # If pair data is not available, return empty features
         if not pair_data:
-            # Try to load vectors for this pair
-            pass  # TODO: Implement on-demand vector loading if needed
+            return pair_id, features, labels
         
         # Get vectors for both records
-        if pair_data:
-            left_vectors = pair_data.get('left_vectors', {})
-            right_vectors = pair_data.get('right_vectors', {})
+        left_vectors = pair_data.get('left_vectors', {})
+        right_vectors = pair_data.get('right_vectors', {})
+        
+        # Calculate cosine similarity features
+        for field in self.cosine_similarities:
+            if field in left_vectors and field in right_vectors:
+                # Calculate cosine similarity
+                similarity = self._compute_cosine_similarity(
+                    left_vectors[field],
+                    right_vectors[field]
+                )
+                
+                # Normalize cosine similarity from [-1, 1] to [0, 1]
+                # This ensures all similarities have consistent scale
+                normalized_similarity = (similarity + 1) / 2
+                features[f"{field}_cosine"] = normalized_similarity
+        
+        # Apply prefilters if configured
+        prefilter_result = self._apply_prefilters(left_vectors, right_vectors, features)
+        if prefilter_result:
+            labels['prefiltered'] = True
+            labels['prefilter_match'] = prefilter_result == 'match'
+        
+        # Calculate string similarity features
+        for field_config in self.string_similarities:
+            field = field_config['field']
+            metrics = field_config['metrics']
             
-            # Calculate cosine similarity features
-            for field in self.cosine_similarities:
-                if field in left_vectors and field in right_vectors:
-                    # Calculate cosine similarity
-                    similarity = self._compute_cosine_similarity(
-                        left_vectors[field],
-                        right_vectors[field]
-                    )
-                    
-                    features[f"{field}_cosine"] = similarity
+            # Get left and right field hashes
+            left_hash = None
+            right_hash = None
             
-            # Apply prefilters if configured
-            prefilter_result = self._apply_prefilters(left_vectors, right_vectors, features)
-            if prefilter_result:
-                labels['prefiltered'] = True
-                labels['prefilter_match'] = prefilter_result == 'match'
+            if 'hashes' in pair_data:
+                left_hash = pair_data['hashes'].get('left', {}).get(field)
+                right_hash = pair_data['hashes'].get('right', {}).get(field)
             
-            # Calculate string similarity features
-            for field_config in self.string_similarities:
-                field = field_config['field']
-                metrics = field_config['metrics']
-                
-                # Get left and right field hashes
-                left_hash = None
-                right_hash = None
-                
-                if 'hashes' in pair_data:
-                    left_hash = pair_data['hashes'].get('left', {}).get(field)
-                    right_hash = pair_data['hashes'].get('right', {}).get(field)
-                
-                # If hashes are available, get the string values
-                left_string = None
-                right_string = None
-                
-                if left_hash and left_hash in self.unique_strings:
-                    left_string = self.unique_strings[left_hash]
-                
-                if right_hash and right_hash in self.unique_strings:
-                    right_string = self.unique_strings[right_hash]
-                
-                # If we have both strings, calculate string similarity
-                if left_string and right_string:
-                    for metric in metrics:
-                        if metric == 'levenshtein':
-                            distance = Levenshtein.distance(left_string, right_string)
-                            max_len = max(len(left_string), len(right_string))
-                            similarity = 1.0 - (distance / max_len) if max_len > 0 else 1.0
-                            features[f"{field}_levenshtein"] = similarity
+            # If hashes are available, get the string values
+            left_string = None
+            right_string = None
+            
+            if left_hash and left_hash in self.unique_strings:
+                left_string = self.unique_strings[left_hash]
+            
+            if right_hash and right_hash in self.unique_strings:
+                right_string = self.unique_strings[right_hash]
+            
+            # If we have both strings, calculate string similarity
+            if left_string and right_string:
+                for metric in metrics:
+                    if metric == 'levenshtein':
+                        # Calculate Levenshtein distance
+                        distance = Levenshtein.distance(left_string, right_string)
+                        max_len = max(len(left_string), len(right_string))
                         
-                        elif metric == 'jaro_winkler':
-                            similarity = jellyfish.jaro_winkler_similarity(left_string, right_string)
-                            features[f"{field}_jaro_winkler"] = similarity
-            
-            # Calculate harmonic mean features
-            for field1, field2 in self.harmonic_means:
-                if (field1 in left_vectors and field1 in right_vectors and
-                    field2 in left_vectors and field2 in right_vectors):
+                        # Convert to similarity score (0-1 range)
+                        similarity = 1.0 - (distance / max_len) if max_len > 0 else 1.0
+                        
+                        # Levenshtein similarity is already normalized (0-1)
+                        features[f"{field}_levenshtein"] = similarity
                     
-                    # Get cosine similarities for both fields
-                    sim1 = features.get(f"{field1}_cosine")
-                    sim2 = features.get(f"{field2}_cosine")
-                    
-                    if sim1 is not None and sim2 is not None:
-                        # Calculate harmonic mean
-                        harmonic_mean = compute_harmonic_mean(sim1, sim2)
-                        features[f"{field1}_{field2}_harmonic"] = harmonic_mean
+                    elif metric == 'jaro_winkler':
+                        # Jaro-Winkler similarity is already normalized (0-1)
+                        similarity = jellyfish.jaro_winkler_similarity(left_string, right_string)
+                        features[f"{field}_jaro_winkler"] = similarity
+        
+        # Calculate harmonic mean features
+        for field1, field2 in self.harmonic_means:
+            # Get normalized cosine similarities for both fields
+            sim1 = features.get(f"{field1}_cosine")
+            sim2 = features.get(f"{field2}_cosine")
             
-            # Calculate additional interaction features
-            for interaction in self.additional_interactions:
-                interaction_type = interaction['type']
-                fields = interaction['fields']
+            if sim1 is not None and sim2 is not None:
+                # Calculate harmonic mean
+                # Since we've normalized the input similarities to 0-1 range,
+                # the harmonic mean will also be in 0-1 range
+                harmonic_mean = compute_harmonic_mean(sim1, sim2)
+                features[f"{field1}_{field2}_harmonic"] = harmonic_mean
+        
+        # Calculate additional interaction features
+        for interaction in self.additional_interactions:
+            interaction_type = interaction['type']
+            fields = interaction['fields']
+            
+            if len(fields) == 2:
+                field1, field2 = fields
                 
-                if len(fields) == 2:
-                    field1, field2 = fields
+                # Get normalized cosine similarities for both fields
+                sim1 = features.get(f"{field1}_cosine")
+                sim2 = features.get(f"{field2}_cosine")
+                
+                if sim1 is not None and sim2 is not None:
+                    if interaction_type == 'product':
+                        # Calculate product
+                        # Product of two 0-1 values will remain in 0-1 range
+                        product = sim1 * sim2
+                        features[f"{field1}_{field2}_product"] = product
                     
-                    if (field1 in left_vectors and field1 in right_vectors and
-                        field2 in left_vectors and field2 in right_vectors):
-                        
-                        # Get cosine similarities for both fields
-                        sim1 = features.get(f"{field1}_cosine")
-                        sim2 = features.get(f"{field2}_cosine")
-                        
-                        if sim1 is not None and sim2 is not None:
-                            if interaction_type == 'product':
-                                # Calculate product
-                                product = sim1 * sim2
-                                features[f"{field1}_{field2}_product"] = product
+                    elif interaction_type == 'ratio':
+                        # Calculate ratio
+                        if sim2 > 0:
+                            ratio = sim1 / sim2
                             
-                            elif interaction_type == 'ratio':
-                                # Calculate ratio
-                                ratio = sim1 / sim2 if sim2 > 0 else 0.0
-                                features[f"{field1}_{field2}_ratio"] = ratio
+                            # Normalize the ratio to 0-1 range
+                            # Use a sigmoid-like function to map arbitrary ratios to 0-1
+                            # This ensures very large ratios don't dominate
+                            normalized_ratio = 2 / (1 + np.exp(-ratio)) - 1
+                            features[f"{field1}_{field2}_ratio"] = normalized_ratio
+                        else:
+                            # Avoid division by zero
+                            features[f"{field1}_{field2}_ratio"] = 0.0
+        
+        # Final feature validation to ensure all features are in 0-1 range
+        for feature_name, value in list(features.items()):
+            # Handle any features that might have slipped through normalization
+            if value < 0 or value > 1:
+                logger.warning(f"Feature {feature_name} with value {value} outside 0-1 range, normalizing")
+                if value < 0:
+                    features[feature_name] = 0.0
+                elif value > 1:
+                    features[feature_name] = 1.0
         
         return pair_id, features, labels
     

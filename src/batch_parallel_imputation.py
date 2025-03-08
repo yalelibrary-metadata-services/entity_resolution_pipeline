@@ -146,67 +146,54 @@ class Imputator:
         total_fields_imputed = 0
         
         with Timer() as timer:
-            # Process batches in parallel
-            with ProcessPoolExecutor(max_workers=self.max_workers) as executor:
-                # Submit jobs
-                future_to_batch = {
-                    executor.submit(
-                        self._process_record_batch,
-                        batch,
-                        record_field_hashes
-                    ): batch_idx
-                    for batch_idx, batch in enumerate(record_batches)
-                }
-                
-                # Process results as they complete
-                for future in tqdm(as_completed(future_to_batch), total=len(future_to_batch), desc="Processing batches"):
-                    batch_idx = future_to_batch[future]
+            # Process each batch one at a time instead of using ProcessPoolExecutor
+            for batch_idx, batch in enumerate(tqdm(record_batches, desc="Processing batches")):
+                try:
+                    # Process batch
+                    batch_results = self._process_record_batch(batch, record_field_hashes)
                     
-                    try:
-                        batch_results = future.result()
+                    # Update imputed values
+                    for record_id, imputed_fields in batch_results.items():
+                        if record_id not in self.imputed_values:
+                            self.imputed_values[record_id] = {}
                         
-                        # Update imputed values
-                        for record_id, imputed_fields in batch_results.items():
-                            if record_id not in self.imputed_values:
-                                self.imputed_values[record_id] = {}
-                            
-                            self.imputed_values[record_id].update(imputed_fields)
-                            
-                            # Update processed records
-                            processed_records.add(record_id)
-                            
-                            # Update counters
-                            if imputed_fields:
-                                total_imputed += 1
-                                total_fields_imputed += len(imputed_fields)
+                        self.imputed_values[record_id].update(imputed_fields)
                         
-                        # Save checkpoint periodically
-                        if batch_idx % 10 == 0:
-                            checkpoint_path = self.checkpoint_dir / f"imputation_{batch_idx}.ckpt"
-                            save_checkpoint({
-                                'imputed_values': self.imputed_values,
-                                'processed_records': list(processed_records)
-                            }, checkpoint_path)
-                            
-                            # Log progress
-                            logger.info(
-                                f"Processed {batch_idx + 1}/{len(record_batches)} batches, "
-                                f"{total_imputed} records imputed, "
-                                f"{total_fields_imputed} fields imputed"
-                            )
+                        # Update processed records
+                        processed_records.add(record_id)
+                        
+                        # Update counters
+                        if imputed_fields:
+                            total_imputed += 1
+                            total_fields_imputed += len(imputed_fields)
                     
-                    except Exception as e:
-                        logger.error(f"Error processing batch {batch_idx}: {e}")
-                        
-                        # Save checkpoint on error
-                        error_checkpoint = self.checkpoint_dir / f"imputation_error_{batch_idx}.ckpt"
+                    # Save checkpoint periodically
+                    if batch_idx % 10 == 0:
+                        checkpoint_path = self.checkpoint_dir / f"imputation_{batch_idx}.ckpt"
                         save_checkpoint({
                             'imputed_values': self.imputed_values,
                             'processed_records': list(processed_records)
-                        }, error_checkpoint)
+                        }, checkpoint_path)
                         
-                        # Continue with next batch
-                        continue
+                        # Log progress
+                        logger.info(
+                            f"Processed {batch_idx + 1}/{len(record_batches)} batches, "
+                            f"{total_imputed} records imputed, "
+                            f"{total_fields_imputed} fields imputed"
+                        )
+                
+                except Exception as e:
+                    logger.error(f"Error processing batch {batch_idx}: {e}")
+                    
+                    # Save checkpoint on error
+                    error_checkpoint = self.checkpoint_dir / f"imputation_error_{batch_idx}.ckpt"
+                    save_checkpoint({
+                        'imputed_values': self.imputed_values,
+                        'processed_records': list(processed_records)
+                    }, error_checkpoint)
+                    
+                    # Continue with next batch
+                    continue
         
         # Save final results
         self._save_results(processed_records)
@@ -350,68 +337,74 @@ class Imputator:
         Returns:
             dict: Dictionary of record ID -> imputed fields
         """
-        # Connect to Weaviate for this process
-        client = weaviate.connect_to_local(
-            host=self.weaviate_host,
-            port=self.weaviate_port
-        )
-        
-        # Get the collection
-        collection = client.collections.get(self.collection_name)
-        
-        batch_results = {}
-        
-        for record_id in batch:
-            try:
-                # Get record field hashes
-                field_hashes = record_field_hashes[record_id]
-                
-                # Check if composite field is available
-                if 'composite' not in field_hashes or field_hashes['composite'] == "NULL":
-                    logger.warning(f"Record {record_id} missing composite field, skipping")
-                    batch_results[record_id] = {}
-                    continue
-                
-                # Get composite vector
-                composite_hash = field_hashes['composite']
-                composite_vector = self._get_vector_by_hash(
-                    collection, composite_hash, 'composite'
-                )
-                
-                if not composite_vector:
-                    logger.warning(f"Failed to get composite vector for record {record_id}")
-                    batch_results[record_id] = {}
-                    continue
-                
-                # Identify missing fields
-                missing_fields = []
-                for field in self.fields_to_impute:
-                    if field not in field_hashes or field_hashes[field] == "NULL":
-                        missing_fields.append(field)
-                
-                # Initialize imputed fields
-                imputed_fields = {}
-                
-                # Impute each missing field
-                for field in missing_fields:
-                    # Impute value using vector similarity
-                    imputed_data = self._impute_field(
-                        collection, field, composite_vector
+        # Don't use self.client here - create a new client in each worker process
+        try:
+            # Connect to Weaviate for this process
+            client = weaviate.connect_to_local(
+                host=self.weaviate_host,
+                port=self.weaviate_port
+            )
+            
+            # Get the collection
+            collection = client.collections.get(self.collection_name)
+            
+            batch_results = {}
+            
+            for record_id in batch:
+                try:
+                    # Get record field hashes
+                    field_hashes = record_field_hashes[record_id]
+                    
+                    # Check if composite field is available
+                    if 'composite' not in field_hashes or field_hashes['composite'] == "NULL":
+                        logger.warning(f"Record {record_id} missing composite field, skipping")
+                        batch_results[record_id] = {}
+                        continue
+                    
+                    # Get composite vector
+                    composite_hash = field_hashes['composite']
+                    composite_vector = self._get_vector_by_hash(
+                        collection, composite_hash, 'composite'
                     )
                     
-                    if imputed_data:
-                        imputed_fields[field] = imputed_data
+                    if not composite_vector:
+                        logger.warning(f"Failed to get composite vector for record {record_id}")
+                        batch_results[record_id] = {}
+                        continue
+                    
+                    # Identify missing fields
+                    missing_fields = []
+                    for field in self.fields_to_impute:
+                        if field not in field_hashes or field_hashes[field] == "NULL":
+                            missing_fields.append(field)
+                    
+                    # Initialize imputed fields
+                    imputed_fields = {}
+                    
+                    # Impute each missing field
+                    for field in missing_fields:
+                        # Impute value using vector similarity
+                        imputed_data = self._impute_field(
+                            collection, field, composite_vector
+                        )
+                        
+                        if imputed_data:
+                            imputed_fields[field] = imputed_data
+                    
+                    batch_results[record_id] = imputed_fields
                 
-                batch_results[record_id] = imputed_fields
+                except Exception as e:
+                    logger.error(f"Error imputing values for record {record_id}: {e}")
+                    batch_results[record_id] = {}
             
-            except Exception as e:
-                logger.error(f"Error imputing values for record {record_id}: {e}")
-                batch_results[record_id] = {}
+            # Close Weaviate client when done
+            client.close()
+            
+            return batch_results
         
-        # Close Weaviate client
-        client.close()
-        
-        return batch_results
+        except Exception as e:
+            logger.error(f"Error connecting to Weaviate in worker process: {e}")
+            return {}
     
     def _get_vector_by_hash(self, collection, hash_value, field_type):
         """
@@ -468,6 +461,7 @@ class Imputator:
             results = collection.query.near_vector(
                 near_vector=query_vector,
                 filters=field_filter,
+                target_vector=field,
                 limit=self.max_candidates,
                 return_metadata=MetadataQuery(distance=True),
                 include_vector=True
