@@ -119,6 +119,10 @@ class ReportGenerator:
             if feature_importance_report:
                 generated_reports.append(feature_importance_report)
         
+        rfe_report = self._generate_rfe_report()
+        if rfe_report:
+            generated_reports.append(rfe_report)
+
         # Generate test results analysis
         test_results_report = self._analyze_test_results()
         if test_results_report:
@@ -1528,3 +1532,253 @@ class ReportGenerator:
             import traceback
             logger.error(traceback.format_exc())
             return None
+    
+    def _generate_rfe_report(self):
+        """
+        Generate a report on the recursive feature elimination results.
+        
+        Returns:
+            str: Path to report file
+        """
+        logger.info("Generating recursive feature elimination report")
+        
+        # Check if RFE was enabled in configuration
+        if not self.config['features']['rfe_enabled']:
+            logger.info("RFE was not enabled in configuration, skipping report")
+            return None
+        
+        # Load feature engineering metadata to find RFE results
+        metadata_path = self.output_dir / "ground_truth_features_metadata.json"
+        if not metadata_path.exists():
+            logger.warning("Feature engineering metadata not found")
+            return None
+        
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+        
+        # Load RFE model if available
+        rfe_path = metadata.get('rfe_path')
+        if not rfe_path or not os.path.exists(rfe_path):
+            logger.warning("RFE model not found")
+            return None
+        
+        with open(rfe_path, 'rb') as f:
+            import pickle
+            rfe_model = pickle.load(f)
+        
+        # Extract feature names
+        feature_names = metadata.get('feature_names', [])
+        if not feature_names:
+            logger.warning("Feature names not found in metadata")
+            return None
+        
+        # Create RFE report
+        report = {
+            'title': 'Recursive Feature Elimination Results',
+            'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'config': {
+                'rfe_step_size': self.config['features']['rfe_step_size'],
+                'rfe_cv_folds': self.config['features']['rfe_cv_folds']
+            },
+            'selected_features': [],
+            'eliminated_features': [],
+            'cross_validation_scores': []
+        }
+        
+        # Extract selected features
+        if hasattr(rfe_model, 'support_'):
+            report['selected_features'] = [
+                feature_names[i] for i in range(len(feature_names)) 
+                if i < len(rfe_model.support_) and rfe_model.support_[i]
+            ]
+            report['eliminated_features'] = [
+                feature_names[i] for i in range(len(feature_names)) 
+                if i < len(rfe_model.support_) and not rfe_model.support_[i]
+            ]
+        
+        # Extract cross-validation scores if available
+        if hasattr(rfe_model, 'grid_scores_'):
+            report['cross_validation_scores'] = rfe_model.grid_scores_.tolist()
+        elif hasattr(rfe_model, 'cv_results_'):
+            report['cross_validation_scores'] = rfe_model.cv_results_.get('mean_test_score', []).tolist()
+        
+        # Extract ranking if available
+        if hasattr(rfe_model, 'ranking_'):
+            feature_ranking = []
+            for i, rank in enumerate(rfe_model.ranking_):
+                if i < len(feature_names):
+                    feature_ranking.append({
+                        'feature': feature_names[i],
+                        'rank': int(rank)
+                    })
+            report['feature_ranking'] = sorted(feature_ranking, key=lambda x: x['rank'])
+        
+        # Save report
+        report_path = self.reports_dir / "rfe_report.json"
+        with open(report_path, 'w') as f:
+            json.dump(report, f, indent=2)
+        
+        # Create readable summary in Markdown
+        summary_path = self.reports_dir / "rfe_summary.md"
+        with open(summary_path, 'w') as f:
+            f.write(f"# Recursive Feature Elimination Results\n\n")
+            f.write(f"Generated: {report['timestamp']}\n\n")
+            
+            f.write("## Configuration\n\n")
+            f.write(f"- RFE Step Size: {report['config']['rfe_step_size']}\n")
+            f.write(f"- Cross-Validation Folds: {report['config']['rfe_cv_folds']}\n\n")
+            
+            f.write("## Selected Features\n\n")
+            for i, feature in enumerate(report['selected_features'], 1):
+                f.write(f"{i}. {feature}\n")
+            
+            if 'feature_ranking' in report:
+                f.write("\n## Feature Ranking\n\n")
+                f.write("| Rank | Feature |\n")
+                f.write("|------|--------|\n")
+                
+                for item in report['feature_ranking']:
+                    f.write(f"| {item['rank']} | {item['feature']} |\n")
+            
+            if report['cross_validation_scores']:
+                f.write("\n## Cross-Validation Performance\n\n")
+                f.write("The following scores show model performance at each step of feature elimination:\n\n")
+                for i, score in enumerate(report['cross_validation_scores']):
+                    num_features = len(report['selected_features']) + len(report['eliminated_features']) - i * report['config']['rfe_step_size']
+                    f.write(f"- {num_features} features: {score:.4f}\n")
+                
+            f.write("\n## Eliminated Features\n\n")
+            for i, feature in enumerate(report['eliminated_features'], 1):
+                f.write(f"{i}. {feature}\n")
+        
+        # Visualize RFE results
+        if self.visualization_enabled:
+            self._visualize_rfe_results(report)
+        
+        logger.info(f"RFE report saved to {report_path}")
+        logger.info(f"RFE summary saved to {summary_path}")
+        
+        return str(report_path)
+
+    def _visualize_rfe_results(self, rfe_report):
+        """
+        Create visualizations for recursive feature elimination results.
+        
+        Args:
+            rfe_report (dict): RFE report data
+        """
+        try:
+            # Check if we have cross-validation scores for performance plot
+            if 'cross_validation_scores' in rfe_report and rfe_report['cross_validation_scores']:
+                plt.figure(figsize=(12, 8))
+                
+                scores = rfe_report['cross_validation_scores']
+                num_features_range = []
+                
+                # Calculate number of features at each step
+                total_features = len(rfe_report['selected_features']) + len(rfe_report['eliminated_features'])
+                step_size = rfe_report['config']['rfe_step_size']
+                
+                for i in range(len(scores)):
+                    num_features = total_features - i * step_size
+                    num_features_range.append(num_features)
+                
+                # Plot performance vs number of features
+                plt.plot(num_features_range, scores, 'o-', color=self.colors['match_line'], 
+                        linewidth=3, markersize=8)
+                
+                # Add labels for key points
+                best_idx = np.argmax(scores)
+                best_score = scores[best_idx]
+                best_num_features = num_features_range[best_idx]
+                
+                plt.scatter([best_num_features], [best_score], s=200, c='red', zorder=3,
+                        label=f'Best: {best_num_features} features, score: {best_score:.4f}')
+                
+                # Styling
+                plt.xlabel('Number of Features', fontsize=14)
+                plt.ylabel('Cross-Validation Score (F1)', fontsize=14)
+                plt.title('Performance vs Number of Features in RFE', fontsize=16)
+                plt.grid(linestyle='--', alpha=0.7)
+                
+                # Add vertical line for optimal feature count
+                plt.axvline(x=best_num_features, color='red', linestyle='--', alpha=0.5)
+                
+                # If x-axis has enough points, use integer ticks
+                if len(num_features_range) > 1:
+                    plt.xticks(num_features_range)
+                
+                plt.legend(loc='best', fontsize=12)
+                plt.tight_layout()
+                
+                # Save figure
+                fig_path = self.figures_dir / "rfe_performance_curve.png"
+                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+                plt.close()
+                
+                logger.info(f"RFE performance curve saved to {fig_path}")
+            
+            # Feature ranking visualization
+            if 'feature_ranking' in rfe_report:
+                # Get top 20 features by rank
+                feature_ranking = rfe_report['feature_ranking']
+                top_n = min(20, len(feature_ranking))
+                top_features = feature_ranking[:top_n]
+                
+                plt.figure(figsize=(12, 10))
+                
+                # Invert the order so the highest ranked feature is at the top
+                features = [item['feature'] for item in reversed(top_features)]
+                ranks = [item['rank'] for item in reversed(top_features)]
+                
+                # Create a colormap from blue to light blue based on rank
+                colors = plt.cm.Blues(np.linspace(0.4, 0.8, len(features)))
+                
+                bars = plt.barh(features, [max(ranks) - r + 1 for r in ranks], color=colors)
+                
+                # Add value labels
+                for bar in bars:
+                    width = bar.get_width()
+                    plt.text(width + 0.1, bar.get_y() + bar.get_height()/2,
+                            f'{width:.0f}', ha='left', va='center', fontsize=10)
+                
+                plt.xlabel('Relative Importance (inverse of rank)', fontsize=14)
+                plt.ylabel('Feature', fontsize=14)
+                plt.title('Top Features by RFE Ranking', fontsize=16)
+                plt.grid(axis='x', linestyle='--', alpha=0.5)
+                plt.tight_layout()
+                
+                # Save figure
+                fig_path = self.figures_dir / "rfe_feature_ranking.png"
+                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+                plt.close()
+                
+                logger.info(f"RFE feature ranking visualization saved to {fig_path}")
+                
+            # Selected vs Eliminated Features Comparison
+            plt.figure(figsize=(10, 6))
+            counts = [len(rfe_report['selected_features']), len(rfe_report['eliminated_features'])]
+            labels = ['Selected', 'Eliminated']
+            
+            plt.bar(labels, counts, color=[self.colors['match'], self.colors['non_match']])
+            
+            # Add count labels
+            for i, count in enumerate(counts):
+                plt.text(i, count + 0.5, str(count), ha='center', va='bottom', fontsize=12)
+            
+            plt.ylabel('Number of Features', fontsize=14)
+            plt.title('Feature Selection Results', fontsize=16)
+            plt.grid(axis='y', linestyle='--', alpha=0.5)
+            plt.tight_layout()
+            
+            # Save figure
+            fig_path = self.figures_dir / "rfe_feature_counts.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            logger.info(f"RFE feature counts visualization saved to {fig_path}")
+            
+        except Exception as e:
+            logger.error(f"Error creating RFE visualizations: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
