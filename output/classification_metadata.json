@@ -1,29 +1,18 @@
 {
   "model_path": "tmp/classification_model.pkl",
-  "feature_count": 21,
-  "decision_threshold": 0.96,
+  "feature_count": 10,
+  "decision_threshold": 0.95,
   "feature_names": [
-    "person_cosine",
-    "title_cosine",
-    "title_cosine_squared",
-    "provision_cosine",
-    "subjects_cosine",
+    "birth_death_left",
+    "birth_death_match",
+    "birth_death_right",
     "composite_cosine",
     "low_composite_penalty",
-    "person_title_harmonic",
+    "person_cosine",
     "person_provision_harmonic",
     "person_subjects_harmonic",
-    "title_subjects_harmonic",
-    "title_provision_harmonic",
-    "provision_subjects_harmonic",
-    "person_subjects_product",
-    "composite_subjects_ratio",
-    "title_subjects_product",
-    "title_subjects_ratio",
-    "birth_death_left",
-    "birth_death_right",
-    "birth_death_match",
-    "person_cosine_birth_death_match_product"
+    "person_title_harmonic",
+    "subjects_cosine"
   ],
   "test_results_path": "output/test_results_detailed.csv"
 }

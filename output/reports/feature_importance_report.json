@@ -1,111 +1,56 @@
 {
   "title": "Entity Resolution Feature Importance",
-  "timestamp": "2025-03-09 08:54:25",
+  "timestamp": "2025-03-09 10:10:23",
   "feature_importance": {
     "person_cosine": {
-      "weight": 1.5796807108155013,
-      "abs_weight": 1.5796807108155013,
-      "importance": 0.17607177304407395
+      "weight": 1.7961492066173907,
+      "abs_weight": 1.7961492066173907,
+      "importance": 0.25293410066141553
     },
     "person_title_harmonic": {
-      "weight": 1.0197921973319377,
-      "abs_weight": 1.0197921973319377,
-      "importance": 0.11366640048928073
+      "weight": 1.226022669019244,
+      "abs_weight": 1.226022669019244,
+      "importance": 0.17264876438795088
     },
     "composite_cosine": {
-      "weight": 0.9417884022691324,
-      "abs_weight": 0.9417884022691324,
-      "importance": 0.10497206978887957
-    },
-    "person_cosine_birth_death_match_product": {
-      "weight": 0.834256307384484,
-      "abs_weight": 0.834256307384484,
-      "importance": 0.09298650430349147
+      "weight": 1.1078530039537728,
+      "abs_weight": 1.1078530039537728,
+      "importance": 0.15600808785134815
     },
     "birth_death_match": {
-      "weight": 0.7202831292249013,
-      "abs_weight": 0.7202831292249013,
-      "importance": 0.0802830133887571
+      "weight": 1.078515992246665,
+      "abs_weight": 1.078515992246665,
+      "importance": 0.15187684382947475
     },
     "low_composite_penalty": {
-      "weight": -0.653300555796607,
-      "abs_weight": 0.653300555796607,
-      "importance": 0.07281711196587638
+      "weight": -0.6786271567482326,
+      "abs_weight": 0.6786271567482326,
+      "importance": 0.09556441577578333
     },
     "person_provision_harmonic": {
-      "weight": 0.5754956079875645,
-      "abs_weight": 0.5754956079875645,
-      "importance": 0.06414494485099936
-    },
-    "person_subjects_product": {
-      "weight": 0.47715302765463713,
-      "abs_weight": 0.47715302765463713,
-      "importance": 0.053183645921161295
+      "weight": 0.4571818751457408,
+      "abs_weight": 0.4571818751457408,
+      "importance": 0.06438044567937727
     },
     "birth_death_right": {
-      "weight": -0.3334407166939546,
-      "abs_weight": 0.3334407166939546,
-      "importance": 0.0371654207026956
+      "weight": -0.2618112284994687,
+      "abs_weight": 0.2618112284994687,
+      "importance": 0.036868311039863204
     },
     "birth_death_left": {
-      "weight": -0.2955904920290184,
-      "abs_weight": 0.2955904920290184,
-      "importance": 0.03294662121920287
-    },
-    "title_subjects_ratio": {
-      "weight": -0.2682682295338963,
-      "abs_weight": 0.2682682295338963,
-      "importance": 0.029901272138116566
-    },
-    "provision_subjects_harmonic": {
-      "weight": -0.21148684506551793,
-      "abs_weight": 0.21148684506551793,
-      "importance": 0.02357239885961498
-    },
-    "title_provision_harmonic": {
-      "weight": -0.19362323942085027,
-      "abs_weight": 0.19362323942085027,
-      "importance": 0.021581315030280233
-    },
-    "person_subjects_harmonic": {
-      "weight": 0.17395510347601675,
-      "abs_weight": 0.17395510347601675,
-      "importance": 0.019389097612818092
-    },
-    "title_cosine": {
-      "weight": 0.1431165285975768,
-      "abs_weight": 0.1431165285975768,
-      "importance": 0.015951819104684472
-    },
-    "title_subjects_harmonic": {
-      "weight": -0.13193954759607693,
-      "abs_weight": 0.13193954759607693,
-      "importance": 0.014706028832802209
-    },
-    "title_cosine_squared": {
-      "weight": 0.12684911384553027,
-      "abs_weight": 0.12684911384553027,
-      "importance": 0.014138647279121374
+      "weight": -0.22484890709224487,
+      "abs_weight": 0.22484890709224487,
+      "importance": 0.03166326933784282
     },
     "subjects_cosine": {
-      "weight": -0.08609360128331384,
-      "abs_weight": 0.08609360128331384,
-      "importance": 0.00959602337479772
+      "weight": -0.19345616475270927,
+      "abs_weight": 0.19345616475270927,
+      "importance": 0.02724253690554139
     },
-    "provision_cosine": {
-      "weight": -0.07725357988708417,
-      "abs_weight": 0.07725357988708417,
-      "importance": 0.008610711450479683
-    },
-    "composite_subjects_ratio": {
-      "weight": -0.07110331531710617,
-      "abs_weight": 0.07110331531710617,
-      "importance": 0.007925200777270828
-    },
-    "title_subjects_product": {
-      "weight": -0.05732962053863061,
-      "abs_weight": 0.05732962053863061,
-      "importance": 0.0063899798655955055
+    "person_subjects_harmonic": {
+      "weight": 0.07678745021832296,
+      "abs_weight": 0.07678745021832296,
+      "importance": 0.010813224531402738
     }
   },
   "feature_representations": {

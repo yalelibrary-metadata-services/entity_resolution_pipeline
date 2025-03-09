@@ -701,6 +701,107 @@ class FeatureEngineer:
         
         return similarity
     
+    def _apply_feature_selection(self, feature_set):
+        """
+        Apply feature selection based on configuration.
+        
+        Args:
+            feature_set (dict): Dictionary of pair ID -> feature vectors
+            
+        Returns:
+            dict: Feature set with selected features
+        """
+        # Skip if feature selection is disabled
+        if not self.config.get('feature_selection', {}).get('enabled', False):
+            logger.info("Feature selection disabled - using all features")
+            return feature_set
+
+        # Get configuration
+        selection_config = self.config['feature_selection']
+        selection_mode = selection_config.get('mode', 'include')
+        base_features = set(selection_config.get('base_features', []))
+        interaction_features = set(selection_config.get('interaction_features', []))
+        
+        # Handle feature groups
+        if selection_config.get('include_all_cosine', False):
+            base_features.update([f for f in self.feature_names if f.endswith('_cosine')])
+        if selection_config.get('include_all_levenshtein', False):
+            base_features.update([f for f in self.feature_names if f.endswith('_levenshtein')])
+        if selection_config.get('include_all_harmonic', False):
+            interaction_features.update([f for f in self.feature_names if f.endswith('_harmonic')])
+        if selection_config.get('include_all_product', False):
+            interaction_features.update([f for f in self.feature_names if f.endswith('_product')])
+        if selection_config.get('include_all_ratio', False):
+            interaction_features.update([f for f in self.feature_names if f.endswith('_ratio')])
+        if selection_config.get('include_all_birth_death', False):
+            base_features.update([f for f in self.feature_names if f.startswith('birth_death')])
+        
+        # Custom features are always kept if configured
+        if selection_config.get('keep_custom_features', True):
+            custom_feature_patterns = [
+                'low_composite_penalty',
+                #'person_levenshtein_birth_death_match_product',
+                #'person_cosine_birth_death_match_product',
+                # Add any other custom features here
+            ]
+            for pattern in custom_feature_patterns:
+                base_features.update([f for f in self.feature_names if pattern in f])
+        
+        # Build the overall feature set
+        selected_features = base_features.union(interaction_features)
+        
+        # Auto-include dependencies if needed
+        if selection_config.get('auto_include_dependencies', False):
+            base_dependencies = set()
+            for interaction in interaction_features:
+                # Extract base feature names from interaction features
+                parts = interaction.split('_')
+                if len(parts) >= 3:  # e.g., "person_title_harmonic"
+                    if parts[-1] in ['harmonic', 'product', 'ratio']:
+                        # For these interactions, the base features are the field names with "_cosine" suffix
+                        field1 = parts[0]
+                        field2 = parts[1]
+                        base_dependencies.add(f"{field1}_cosine")
+                        base_dependencies.add(f"{field2}_cosine")
+            
+            # Add the dependencies to selected features
+            selected_features.update(base_dependencies)
+        
+        # Log the feature selection
+        logger.info(f"Selected {len(selected_features)} features for training")
+        logger.info(f"Base features: {sorted(list(base_features))}")
+        logger.info(f"Interaction features: {sorted(list(interaction_features))}")
+        
+        # Update the feature vectors
+        for pair_id, data in feature_set.items():
+            # Process all feature representations
+            for rep in ['features', 'features_norm', 'features_raw', 'features_std']:
+                if rep in data:
+                    # Apply feature selection
+                    if selection_mode == 'include':
+                        # Include mode - keep only selected features
+                        data[rep] = {
+                            feature: value for feature, value in data[rep].items()
+                            if feature in selected_features
+                        }
+                    else:  # exclude mode
+                        # Exclude mode - remove specified features
+                        data[rep] = {
+                            feature: value for feature, value in data[rep].items()
+                            if feature not in selected_features
+                        }
+        
+        # Update feature names to reflect selection
+        all_remaining_features = set()
+        for pair_id, data in list(feature_set.items())[:5]:  # Sample first 5 pairs
+            if 'features' in data:
+                all_remaining_features.update(data['features'].keys())
+        
+        self.feature_names = sorted(list(all_remaining_features))
+        logger.info(f"Updated feature names list to {len(self.feature_names)} features")
+        
+        return feature_set
+
     def _apply_prefilters(self, left_vectors, right_vectors, features):
         """
         Apply prefilters to automatically classify pairs.
@@ -861,6 +962,8 @@ class FeatureEngineer:
                 # Create a copy of the normalized features for the std version
                 feature_set[pair_id]['features_std'] = feature_set[pair_id]['features'].copy()
         
+        feature_set = self._apply_feature_selection(feature_set)
+
         return feature_set
     
     def _perform_recursive_feature_elimination(self, feature_set):

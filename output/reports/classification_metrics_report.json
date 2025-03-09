@@ -1,17 +1,17 @@
 {
   "title": "Entity Resolution Classification Metrics",
-  "timestamp": "2025-03-09 08:54:25",
+  "timestamp": "2025-03-09 10:10:23",
   "metrics": {
     "precision": 1.0,
-    "recall": 0.8803484499103253,
-    "f1": 0.9363673525003406,
-    "accuracy": 0.9397885507993812,
-    "roc_auc": 0.9999180239030476,
+    "recall": 0.9004184815099496,
+    "f1": 0.9476002157109473,
+    "accuracy": 0.9498882585525185,
+    "roc_auc": 0.9999182751141604,
     "confusion_matrix": {
       "true_negatives": 11559,
       "false_positives": 0,
-      "false_negatives": 1401,
-      "true_positives": 10308
+      "false_negatives": 1166,
+      "true_positives": 10543
     }
   },
   "feature_representations": {

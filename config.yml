@@ -146,7 +146,7 @@ features:
   rfe_enabled: false 
   rfe_step_size: 1
   rfe_cv_folds: 5
-  
+
   # Prefilterers for automatic classification
   prefilters:
     exact_name_birth_death_prefilter: false  # DEPRECATED: Use birth_death_features.use_as_prefilter instead
@@ -156,6 +156,39 @@ features:
     person_cosine_prefilter:
       enabled: false
       threshold: 0.70
+
+# Feature Selection Configuration
+feature_selection:
+  enabled: true  # Master switch for feature selection
+  
+  # Selection mode: "include" (whitelist) or "exclude" (blacklist)
+  mode: "include"
+  
+  # Features explicitly included/excluded (depending on mode)
+  base_features:
+    - "person_cosine"
+    - "composite_cosine"
+    - "subjects_cosine"
+    - "provision_cosine"
+    # Add or remove features as needed
+  
+  interaction_features:
+    - "person_title_harmonic"
+    - "person_provision_harmonic"
+    - "person_subjects_harmonic"
+    # Add or remove features as needed
+  
+  # Special feature groups
+  include_all_cosine: false        # Include all *_cosine features
+  include_all_levenshtein: false   # Include all *_levenshtein features
+  include_all_harmonic: false       # Include all *_harmonic features
+  include_all_product: false        # Include all *_product features
+  include_all_ratio: false         # Include all *_ratio features
+  include_all_birth_death: true    # Include all birth_death* features
+  
+  # Advanced options
+  auto_include_dependencies: false  # Include base features needed for interactions
+  keep_custom_features: true        # Always keep manually created special features
 
 # Classification Configuration
 classification:
@@ -167,7 +200,7 @@ classification:
   convergence_tolerance: 0.0001
   batch_size: 1000
   class_weight: "balanced"  # Options: None, "balanced"
-  decision_threshold: 0.96
+  decision_threshold: 0.95
   precision_recall_tradeoff: "balanced"  # precision, recall, balanced, f1
 
 # Clustering Configuration
