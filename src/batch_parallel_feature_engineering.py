@@ -380,8 +380,7 @@ class FeatureEngineer:
         
         return batch_features
     
-    # Update to _compute_pair_features method in batch_parallel_feature_engineering.py
-
+    
     def _compute_pair_features(self, left_id, right_id, match, pair_data):
         """
         Compute features for a single pair, with proper representation of features
@@ -623,6 +622,10 @@ class FeatureEngineer:
                 
                 # Store the raw and normalized features in the return data
                 return pair_id, features, labels, features_raw, features_norm
+        
+        # Add this return statement to ensure the function always returns a value
+        # This handles the case when no prefilters apply
+        return pair_id, features, labels
     
     def _compute_cosine_similarity(self, vec1, vec2):
         """Compute cosine similarity between two vectors."""
