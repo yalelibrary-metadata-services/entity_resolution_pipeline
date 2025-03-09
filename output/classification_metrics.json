@@ -1,14 +1,14 @@
 {
-  "accuracy": 0.9627385250128933,
-  "precision": 0.9970658353200074,
-  "recall": 0.9286873345289948,
-  "f1": 0.9616626133097501,
+  "accuracy": 0.9986247206463813,
+  "precision": 0.9972745081338897,
+  "recall": 1.0,
+  "f1": 0.99863539445629,
   "roc_auc": 0.99931398678235,
   "confusion_matrix": {
     "true_negatives": 11527,
     "false_positives": 32,
-    "false_negatives": 835,
-    "true_positives": 10874
+    "false_negatives": 0,
+    "true_positives": 11709
   },
   "feature_importance": {
     "person_cosine": {

@@ -1,7 +1,7 @@
 {
   "model_path": "tmp/classification_model.pkl",
   "feature_count": 22,
-  "decision_threshold": 0.96,
+  "decision_threshold": 0.5,
   "feature_names": [
     "person_cosine",
     "title_cosine",

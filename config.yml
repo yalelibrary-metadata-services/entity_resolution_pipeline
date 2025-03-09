@@ -138,7 +138,7 @@ features:
   normalize_features: true
   
   # Recursive feature elimination
-  rfe_enabled: true  # Disabled based on our debugging
+  rfe_enabled: false 
   rfe_step_size: 1
   rfe_cv_folds: 5
   
@@ -162,7 +162,7 @@ classification:
   convergence_tolerance: 0.0001
   batch_size: 1000
   class_weight: "balanced"  # Options: None, "balanced"
-  decision_threshold: 0.96
+  decision_threshold: 0.5
   precision_recall_tradeoff: "balanced"  # precision, recall, balanced, f1
 
 # Clustering Configuration

@@ -1,7 +1,7 @@
 {
   "feature_set_path": "tmp/ground_truth_features.pkl",
   "scaler_path": "tmp/feature_scaler.pkl",
-  "rfe_path": "tmp/feature_rfe.pkl",
+  "rfe_path": null,
   "feature_count": 22,
   "pair_count": 77559,
   "processed_pairs": 77560,
