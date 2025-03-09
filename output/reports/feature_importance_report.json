@@ -1,0 +1,44 @@
+{
+  "title": "Entity Resolution Feature Importance",
+  "timestamp": "2025-03-08 20:01:22",
+  "feature_importance": {
+    "person_cosine": {
+      "weight": 2.902375322179406,
+      "abs_weight": 2.902375322179406,
+      "importance": 0.4890060496177594
+    },
+    "composite_cosine": {
+      "weight": 1.570748958344975,
+      "abs_weight": 1.570748958344975,
+      "importance": 0.2646472829312485
+    },
+    "low_composite_penalty": {
+      "weight": -0.6652680797658664,
+      "abs_weight": 0.6652680797658664,
+      "importance": 0.11208754193059171
+    },
+    "title_cosine": {
+      "weight": 0.21389454378666786,
+      "abs_weight": 0.21389454378666786,
+      "importance": 0.036037973825304555
+    },
+    "title_cosine_squared": {
+      "weight": 0.21108426901439403,
+      "abs_weight": 0.21108426901439403,
+      "importance": 0.035564485316003785
+    },
+    "subjects_cosine": {
+      "weight": -0.19110973646433368,
+      "abs_weight": 0.19110973646433368,
+      "importance": 0.03219908071769988
+    },
+    "provision_cosine": {
+      "weight": 0.18077352021695695,
+      "abs_weight": 0.18077352021695695,
+      "importance": 0.030457585661392284
+    }
+  },
+  "feature_representations": {
+    "note": "Feature importance is based on the StandardScaler values used for model training"
+  }
+}

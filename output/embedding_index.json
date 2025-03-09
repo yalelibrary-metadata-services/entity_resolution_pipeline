@@ -1,0 +1,6 @@
+{
+  "location": "tmp/embeddings.pkl",
+  "count": 7327,
+  "dimensions": 1536,
+  "format": "pickle"
+}

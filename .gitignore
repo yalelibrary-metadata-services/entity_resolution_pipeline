@@ -178,6 +178,5 @@ data
 dev_data
 input
 logs
-output
 tmp
 weaviate_data

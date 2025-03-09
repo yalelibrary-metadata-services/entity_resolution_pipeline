@@ -1,0 +1,22 @@
+{
+  "title": "Entity Resolution Classification Metrics",
+  "timestamp": "2025-03-08 20:01:22",
+  "metrics": {
+    "precision": 1.0,
+    "recall": 0.8849602869587497,
+    "f1": 0.9389696887318201,
+    "accuracy": 0.9421093347086127,
+    "roc_auc": 0.9999430120202077,
+    "confusion_matrix": {
+      "true_negatives": 11559,
+      "false_positives": 0,
+      "false_negatives": 1347,
+      "true_positives": 10362
+    }
+  },
+  "feature_representations": {
+    "standard": "Main feature columns contain StandardScaler values used for training",
+    "raw": "Raw feature values in original range (e.g., [-1,1] for cosine similarity)",
+    "normalized": "Domain-normalized feature values in [0,1] range"
+  }
+}

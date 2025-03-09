@@ -1,0 +1,15 @@
+{
+  "model_path": "tmp/classification_model.pkl",
+  "feature_count": 7,
+  "decision_threshold": 0.96,
+  "feature_names": [
+    "person_cosine",
+    "title_cosine",
+    "title_cosine_squared",
+    "provision_cosine",
+    "subjects_cosine",
+    "composite_cosine",
+    "low_composite_penalty"
+  ],
+  "test_results_path": "output/test_results_detailed.csv"
+}

@@ -1,0 +1,32 @@
+{
+  "composite": {
+    "count": 2354,
+    "null_count": 0,
+    "unique_count": 2257
+  },
+  "person": {
+    "count": 2354,
+    "null_count": 0,
+    "unique_count": 159
+  },
+  "title": {
+    "count": 2354,
+    "null_count": 0,
+    "unique_count": 1799
+  },
+  "provision": {
+    "count": 2354,
+    "null_count": 31,
+    "unique_count": 1664
+  },
+  "subjects": {
+    "count": 2354,
+    "null_count": 330,
+    "unique_count": 1459
+  },
+  "roles": {
+    "count": 2354,
+    "null_count": 0,
+    "unique_count": 43
+  }
+}

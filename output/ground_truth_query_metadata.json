@@ -1,0 +1,7 @@
+{
+  "record_vectors_path": "tmp/record_vectors.pkl",
+  "pair_vectors_path": "tmp/pair_vectors.pkl",
+  "record_count": 2354,
+  "pair_count": 77592,
+  "processed_pairs": 77559
+}

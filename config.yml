@@ -162,8 +162,8 @@ classification:
   convergence_tolerance: 0.0001
   batch_size: 1000
   class_weight: "balanced"  # Options: None, "balanced"
-  decision_threshold: 0.75
-  precision_recall_tradeoff: "precision"  # precision, recall, balanced, f1
+  decision_threshold: 0.96
+  precision_recall_tradeoff: "balanced"  # precision, recall, balanced, f1
 
 # Clustering Configuration
 clustering:

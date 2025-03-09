@@ -1,0 +1,17 @@
+{
+  "feature_set_path": "tmp/ground_truth_features.pkl",
+  "scaler_path": "tmp/feature_scaler.pkl",
+  "rfe_path": null,
+  "feature_count": 7,
+  "pair_count": 77559,
+  "processed_pairs": 77560,
+  "feature_names": [
+    "person_cosine",
+    "title_cosine",
+    "title_cosine_squared",
+    "provision_cosine",
+    "subjects_cosine",
+    "composite_cosine",
+    "low_composite_penalty"
+  ]
+}
