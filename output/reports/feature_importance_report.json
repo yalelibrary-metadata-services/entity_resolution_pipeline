@@ -1,41 +1,71 @@
 {
   "title": "Entity Resolution Feature Importance",
-  "timestamp": "2025-03-08 20:40:28",
+  "timestamp": "2025-03-08 22:20:50",
   "feature_importance": {
-    "person_cosine": {
-      "weight": 2.902375322179406,
-      "abs_weight": 2.902375322179406,
-      "importance": 0.4890060496177594
+    "person_levenshtein": {
+      "weight": 2.735288084378429,
+      "abs_weight": 2.735288084378429,
+      "importance": 0.3946686190118653
     },
     "composite_cosine": {
-      "weight": 1.570748958344975,
-      "abs_weight": 1.570748958344975,
-      "importance": 0.2646472829312485
+      "weight": 1.85422472651352,
+      "abs_weight": 1.85422472651352,
+      "importance": 0.26754195155171046
     },
     "low_composite_penalty": {
-      "weight": -0.6652680797658664,
-      "abs_weight": 0.6652680797658664,
-      "importance": 0.11208754193059171
+      "weight": -1.0172829353603778,
+      "abs_weight": 1.0172829353603778,
+      "importance": 0.14678148657758366
     },
     "title_cosine": {
-      "weight": 0.21389454378666786,
-      "abs_weight": 0.21389454378666786,
-      "importance": 0.036037973825304555
+      "weight": 0.2816348553046726,
+      "abs_weight": 0.2816348553046726,
+      "importance": 0.04063646533010803
     },
     "title_cosine_squared": {
-      "weight": 0.21108426901439403,
-      "abs_weight": 0.21108426901439403,
-      "importance": 0.035564485316003785
+      "weight": 0.24926495652211558,
+      "abs_weight": 0.24926495652211558,
+      "importance": 0.03596588480770257
     },
-    "subjects_cosine": {
-      "weight": -0.19110973646433368,
-      "abs_weight": 0.19110973646433368,
-      "importance": 0.03219908071769988
+    "title_subjects_ratio": {
+      "weight": -0.2378254629947062,
+      "abs_weight": 0.2378254629947062,
+      "importance": 0.03431530579248202
+    },
+    "composite_subjects_ratio": {
+      "weight": 0.15830985548137966,
+      "abs_weight": 0.15830985548137966,
+      "importance": 0.022842176074847384
+    },
+    "provision_subjects_harmonic": {
+      "weight": -0.11738612318279652,
+      "abs_weight": 0.11738612318279652,
+      "importance": 0.016937381986306864
     },
     "provision_cosine": {
-      "weight": 0.18077352021695695,
-      "abs_weight": 0.18077352021695695,
-      "importance": 0.030457585661392284
+      "weight": 0.1064914684431374,
+      "abs_weight": 0.1064914684431374,
+      "importance": 0.015365416544981353
+    },
+    "title_provision_harmonic": {
+      "weight": -0.06424490844460178,
+      "abs_weight": 0.06424490844460178,
+      "importance": 0.009269754597032333
+    },
+    "title_subjects_product": {
+      "weight": 0.046797895344825265,
+      "abs_weight": 0.046797895344825265,
+      "importance": 0.006752363977266789
+    },
+    "title_subjects_harmonic": {
+      "weight": -0.04443405978922584,
+      "abs_weight": 0.04443405978922584,
+      "importance": 0.006411291415430375
+    },
+    "subjects_cosine": {
+      "weight": 0.017408976008561765,
+      "abs_weight": 0.017408976008561765,
+      "importance": 0.002511902332682845
     }
   },
   "feature_representations": {

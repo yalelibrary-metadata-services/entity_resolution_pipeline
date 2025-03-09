@@ -1,0 +1,58 @@
+{
+  "title": "Recursive Feature Elimination Results",
+  "timestamp": "2025-03-08 20:59:14",
+  "config": {
+    "rfe_step_size": 1,
+    "rfe_cv_folds": 5
+  },
+  "selected_features": [
+    "person_cosine"
+  ],
+  "eliminated_features": [
+    "title_cosine",
+    "title_cosine_squared",
+    "provision_cosine",
+    "subjects_cosine",
+    "composite_cosine",
+    "low_composite_penalty"
+  ],
+  "cross_validation_scores": [
+    0.9987761176674755,
+    0.9986600162057295,
+    0.998595446093779,
+    0.998556720675435,
+    0.9984535515673022,
+    0.9985051278679921,
+    0.9985051278679921
+  ],
+  "feature_ranking": [
+    {
+      "feature": "person_cosine",
+      "rank": 1
+    },
+    {
+      "feature": "composite_cosine",
+      "rank": 2
+    },
+    {
+      "feature": "title_cosine",
+      "rank": 3
+    },
+    {
+      "feature": "low_composite_penalty",
+      "rank": 4
+    },
+    {
+      "feature": "subjects_cosine",
+      "rank": 5
+    },
+    {
+      "feature": "title_cosine_squared",
+      "rank": 6
+    },
+    {
+      "feature": "provision_cosine",
+      "rank": 7
+    }
+  ]
+}

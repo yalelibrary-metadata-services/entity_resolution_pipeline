@@ -1,50 +1,125 @@
 {
-  "accuracy": 0.9421093347086127,
-  "precision": 1.0,
-  "recall": 0.8849602869587497,
-  "f1": 0.9389696887318201,
-  "roc_auc": 0.9999430120202077,
+  "accuracy": 0.9627385250128933,
+  "precision": 0.9970658353200074,
+  "recall": 0.9286873345289948,
+  "f1": 0.9616626133097501,
+  "roc_auc": 0.99931398678235,
   "confusion_matrix": {
-    "true_negatives": 11559,
-    "false_positives": 0,
-    "false_negatives": 1347,
-    "true_positives": 10362
+    "true_negatives": 11527,
+    "false_positives": 32,
+    "false_negatives": 835,
+    "true_positives": 10874
   },
   "feature_importance": {
     "person_cosine": {
-      "weight": 2.902375322179406,
-      "abs_weight": 2.902375322179406,
-      "importance": 0.4890060496177594
-    },
-    "composite_cosine": {
-      "weight": 1.570748958344975,
-      "abs_weight": 1.570748958344975,
-      "importance": 0.2646472829312485
-    },
-    "low_composite_penalty": {
-      "weight": -0.6652680797658664,
-      "abs_weight": 0.6652680797658664,
-      "importance": 0.11208754193059171
+      "weight": 4.248400654955564,
+      "abs_weight": 4.248400654955564,
+      "importance": 1.0
     },
     "title_cosine": {
-      "weight": 0.21389454378666786,
-      "abs_weight": 0.21389454378666786,
-      "importance": 0.036037973825304555
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
     },
     "title_cosine_squared": {
-      "weight": 0.21108426901439403,
-      "abs_weight": 0.21108426901439403,
-      "importance": 0.035564485316003785
-    },
-    "subjects_cosine": {
-      "weight": -0.19110973646433368,
-      "abs_weight": 0.19110973646433368,
-      "importance": 0.03219908071769988
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
     },
     "provision_cosine": {
-      "weight": 0.18077352021695695,
-      "abs_weight": 0.18077352021695695,
-      "importance": 0.030457585661392284
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "subjects_cosine": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "composite_cosine": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "low_composite_penalty": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_levenshtein": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_title_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_provision_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_subjects_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "title_subjects_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "title_provision_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "provision_subjects_harmonic": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_subjects_product": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "composite_subjects_ratio": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "title_subjects_product": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "title_subjects_ratio": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "birth_death_left": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "birth_death_right": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "birth_death_match": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
+    },
+    "person_levenshtein_birth_death_match_product": {
+      "weight": 0.0,
+      "abs_weight": 0.0,
+      "importance": 0.0
     }
   },
   "training_duration": null

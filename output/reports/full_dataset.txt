@@ -1,0 +1,22 @@
+Preprocessing Analysis Summary:
+Total records: 17693191
+Total unique strings: 47146475
+
+Unique counts by field:
+  record: 17198168 unique values, 0 null values
+  person: 4984022 unique values, 0 null values
+  roles: 8952 unique values, 0 null values
+  title: 8451649 unique values, 0 null values
+  attribution: 5212996 unique values, 3671547 null values
+  provision: 4885059 unique values, 164890 null values
+  subjects: 6442723 unique values, 2081251 null values
+  genres: 81690 unique values, 11087386 null values
+  relatedWork: 0 unique values, 0 null values
+
+Person name analysis:
+  Total unique persons: 4984022
+  With life dates: 485898 (9.7%)
+  Without life dates: 4498124 (90.3%)
+
+
+true_label	predicted_label	confidence	correct	person_cosine	title_cosine	title_cosine_squared	provision_cosine	subjects_cosine	composite_cosine	low_composite_penalty	pair_id	left_id	right_id	person_cosine_raw	person_cosine_norm	person_cosine_std	title_cosine_raw	title_cosine_norm	title_cosine_std	title_cosine_squared_raw	title_cosine_squared_norm	title_cosine_squared_std	provision_cosine_raw	provision_cosine_norm	provision_cosine_std	subjects_cosine_raw	subjects_cosine_norm	subjects_cosine_std	composite_cosine_raw	composite_cosine_norm	composite_cosine_std

@@ -1,6 +1,6 @@
 {
   "model_path": "tmp/classification_model.pkl",
-  "feature_count": 7,
+  "feature_count": 22,
   "decision_threshold": 0.96,
   "feature_names": [
     "person_cosine",
@@ -9,7 +9,22 @@
     "provision_cosine",
     "subjects_cosine",
     "composite_cosine",
-    "low_composite_penalty"
+    "low_composite_penalty",
+    "person_levenshtein",
+    "person_title_harmonic",
+    "person_provision_harmonic",
+    "person_subjects_harmonic",
+    "title_subjects_harmonic",
+    "title_provision_harmonic",
+    "provision_subjects_harmonic",
+    "person_subjects_product",
+    "composite_subjects_ratio",
+    "title_subjects_product",
+    "title_subjects_ratio",
+    "birth_death_left",
+    "birth_death_right",
+    "birth_death_match",
+    "person_levenshtein_birth_death_match_product"
   ],
   "test_results_path": "output/test_results_detailed.csv"
 }
