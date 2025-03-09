@@ -174,9 +174,7 @@ cython_debug/
 *.log
 cache
 checkpoints
-data
 dev_data
-input
 logs
 tmp
 weaviate_data
