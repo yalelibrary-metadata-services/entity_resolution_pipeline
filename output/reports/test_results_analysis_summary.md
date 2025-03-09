@@ -1,6 +1,6 @@
 # Entity Resolution Test Results Analysis
 
-Generated: 2025-03-08 20:01:23
+Generated: 2025-03-08 20:40:29
 
 ## Feature Representation Guide
 
@@ -53,3 +53,35 @@ This report includes multiple representations of feature values:
 - **Pair**: 1210643#Agent100-13 - 10972343#Agent600-19
   - Confidence: 0.9354
   - Top Features:
+    - person_cosine: 0.7366 (raw: 0.7366, norm: 0.8683)
+    - title_cosine: -0.5941 (raw: -0.5941, norm: 0.2030)
+    - title_cosine_squared: -0.5711 (raw: -0.5711, norm: 0.2145)
+
+- **Pair**: 12143179#Agent700-37 - 16044024#Agent700-40
+  - Confidence: 0.9450
+  - Top Features:
+    - person_cosine: 0.8349 (raw: 0.8349, norm: 0.9175)
+    - title_cosine: -0.0017 (raw: -0.0017, norm: 0.4992)
+    - title_cosine_squared: -0.0686 (raw: -0.0686, norm: 0.4657)
+
+- **Pair**: 5444668#Agent700-45 - 9931651#Agent100-13
+  - Confidence: 0.9555
+  - Top Features:
+    - person_cosine: 0.9074 (raw: 0.9074, norm: 0.9537)
+    - title_cosine: -0.2849 (raw: -0.2849, norm: 0.3576)
+    - title_cosine_squared: -0.3147 (raw: -0.3147, norm: 0.3426)
+
+- **Pair**: 2103845#Agent600-21 - 6305585#Agent100-15
+  - Confidence: 0.8756
+  - Top Features:
+    - person_cosine: 0.6839 (raw: 0.6839, norm: 0.8420)
+    - title_cosine: -0.2763 (raw: -0.2763, norm: 0.3618)
+    - title_cosine_squared: -0.3074 (raw: -0.3074, norm: 0.3463)
+
+- **Pair**: 12596995-bdb04d84-8ffe-4a38-b0d1-5eb6fdd529a2#http://id.loc.gov/rwo/agents/n50043984 - 1878195#Agent100-12
+  - Confidence: 0.9330
+  - Top Features:
+    - person_cosine: 1.0281 (raw: 1.0281, norm: 1.0000)
+    - title_cosine: -0.7270 (raw: -0.7270, norm: 0.1365)
+    - title_cosine_squared: -0.6773 (raw: -0.6773, norm: 0.1613)
+

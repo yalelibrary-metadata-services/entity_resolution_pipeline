@@ -307,6 +307,7 @@ class ReportGenerator:
         logger.info(f"Top {len(top_features)} features by separation: {top_features}")
         
         # Create plots for each feature
+        # For each feature in top_features
         for feature in top_features:
             try:
                 plt.figure(figsize=(12, 8))
@@ -322,27 +323,45 @@ class ReportGenerator:
                 if pos_data.nunique() <= 1 or neg_data.nunique() <= 1:
                     # Use a simple bar chart for features with limited variance
                     plt.bar(['Non-Match', 'Match'], [neg_mean, pos_mean], 
-                          color=[self.colors['non_match'], self.colors['match']])
+                        color=[self.colors['non_match'], self.colors['match']])
                     
                     plt.title(f'Values of {feature} by Class (Limited Distribution)', 
-                             fontsize=16)
+                            fontsize=16)
                 else:
-                    # Plot histograms with KDE using the updated color scheme
+                    # Data validation - filter out NaN, inf values and check for extreme outliers
+                    pos_data = pos_data.replace([np.inf, -np.inf], np.nan).dropna()
+                    neg_data = neg_data.replace([np.inf, -np.inf], np.nan).dropna()
+                    
+                    # Calculate reasonable limits to exclude extreme outliers
+                    # Using 5 standard deviations as a threshold
+                    pos_std = pos_data.std()
+                    neg_std = neg_data.std()
+                    pos_limit = pos_mean + 5 * pos_std if not np.isnan(pos_std) else pos_data.max()
+                    neg_limit = neg_mean + 5 * neg_std if not np.isnan(neg_std) else neg_data.max()
+                    
+                    # Filter outliers
+                    pos_data = pos_data[pos_data.between(pos_mean - 5 * pos_std, pos_mean + 5 * pos_std)] if not np.isnan(pos_std) else pos_data
+                    neg_data = neg_data[neg_data.between(neg_mean - 5 * neg_std, neg_mean + 5 * neg_std)] if not np.isnan(neg_std) else neg_data
+                    
+                    # Explicitly set a reasonable number of bins
+                    bins = min(30, max(10, int(np.sqrt(len(pos_data) + len(neg_data)))))
+                    
+                    # Plot histograms with KDE using the updated color scheme and explicit bins
                     sns.histplot(pos_data, kde=True, stat='density', alpha=0.6, 
                                 color=self.colors['match'], label='Matching Entities', 
-                                edgecolor='white', linewidth=0.5)
+                                edgecolor='white', linewidth=0.5, bins=bins)
                     sns.histplot(neg_data, kde=True, stat='density', alpha=0.6, 
                                 color=self.colors['non_match'], label='Non-matching Entities', 
-                                edgecolor='white', linewidth=0.5)
+                                edgecolor='white', linewidth=0.5, bins=bins)
                     
                     # Add mean lines with consistent colors
                     plt.axvline(pos_mean, color=self.colors['match_line'], linestyle='--', 
-                               label=f'Match Mean: {pos_mean:.4f}')
+                            label=f'Match Mean: {pos_mean:.4f}')
                     plt.axvline(neg_mean, color=self.colors['non_match_line'], linestyle='--', 
-                               label=f'Non-match Mean: {neg_mean:.4f}')
+                            label=f'Non-match Mean: {neg_mean:.4f}')
                     
                     plt.title(f'Distribution of {feature} by Class (Separation: {separation:.4f})', 
-                             fontsize=16)
+                            fontsize=16)
                 
                 # Common styling
                 plt.xlabel('Feature Value', fontsize=14)
@@ -360,18 +379,69 @@ class ReportGenerator:
                     f"{feature}_norm" in df.columns and 
                     f"{feature}_std" in df.columns):
                     self._create_feature_comparison_plot(df, feature)
-                
+
             except Exception as e:
                 logger.error(f"Error creating plot for feature {feature}: {e}")
                 import traceback
                 logger.error(traceback.format_exc())
-                continue
+                plt.close()  # Make sure to close any open figures
+                continue                
         
         # Create a summary plot of feature separation power
         self._create_feature_separation_plot(top_features, feature_separation)
         
         return top_features
     
+    def _create_feature_separation_plot(self, top_features, feature_separation):
+        """
+        Create a summary plot showing feature separation power.
+        
+        Args:
+            top_features (list): List of top features
+            feature_separation (dict): Dictionary of feature separation metrics
+        """
+        try:
+            plt.figure(figsize=(14, 8))
+            
+            # Extract separation values for the top features
+            features = top_features
+            separations = [feature_separation[f]['separation'] for f in features]
+            
+            # Create a DataFrame for easier plotting
+            data = pd.DataFrame({
+                'Feature': features,
+                'Separation': separations
+            }).sort_values('Separation', ascending=False)
+            
+            # Use the blue color palette for consistency
+            colors = plt.cm.Blues(np.linspace(0.6, 0.9, len(features)))
+            
+            # Plot horizontal bars
+            bars = plt.barh(data['Feature'], data['Separation'], color=colors)
+            
+            # Add value labels
+            for bar in bars:
+                width = bar.get_width()
+                plt.text(width + 0.01, bar.get_y() + bar.get_height()/2,
+                        f'{width:.4f}', ha='left', va='center', fontsize=10)
+            
+            plt.title('Feature Separation Power (Higher = Better Class Separation)', fontsize=16)
+            plt.xlabel('Mean Absolute Difference Between Classes', fontsize=14)
+            plt.ylabel('Feature', fontsize=14)
+            plt.grid(axis='x', linestyle='--', alpha=0.3)
+            plt.tight_layout()
+            
+            # Save figure
+            plt.savefig(self.figures_dir / 'feature_separation_power.png', dpi=300, bbox_inches='tight')
+            plt.close()
+            logger.info("Created feature separation power plot")
+            
+        except Exception as e:
+            logger.error(f"Error creating feature separation plot: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            plt.close()  # Make sure to close any open figures
+
     def _create_feature_comparison_plot(self, df, feature):
         """
         Create a comparison plot showing raw, normalized, and standardized representations.
@@ -389,14 +459,33 @@ class ReportGenerator:
             raw_pos = df[df['true_label'] == 1][f"{feature}_raw"]
             raw_neg = df[df['true_label'] == 0][f"{feature}_raw"]
             
+            # Data validation and outlier filtering
+            raw_pos = raw_pos.replace([np.inf, -np.inf], np.nan).dropna()
+            raw_neg = raw_neg.replace([np.inf, -np.inf], np.nan).dropna()
+            
+            # Calculate statistics for outlier detection
+            raw_pos_mean = raw_pos.mean()
+            raw_neg_mean = raw_neg.mean()
+            raw_pos_std = raw_pos.std()
+            raw_neg_std = raw_neg.std()
+            
+            # Filter outliers if we have valid statistics
+            if not np.isnan(raw_pos_std) and raw_pos_std > 0:
+                raw_pos = raw_pos[raw_pos.between(raw_pos_mean - 5 * raw_pos_std, raw_pos_mean + 5 * raw_pos_std)]
+            if not np.isnan(raw_neg_std) and raw_neg_std > 0:
+                raw_neg = raw_neg[raw_neg.between(raw_neg_mean - 5 * raw_neg_std, raw_neg_mean + 5 * raw_neg_std)]
+            
+            # Explicitly set a reasonable number of bins
+            bins = min(30, max(10, int(np.sqrt(len(raw_pos) + len(raw_neg)))))
+            
             if raw_pos.nunique() > 1 and raw_neg.nunique() > 1:
                 sns.histplot(raw_pos, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['match'], label='Match', edgecolor='white')
+                            color=self.colors['match'], label='Match', edgecolor='white', bins=bins)
                 sns.histplot(raw_neg, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white', bins=bins)
             else:
                 plt.bar(['Non-Match', 'Match'], [raw_neg.mean(), raw_pos.mean()], 
-                      color=[self.colors['non_match'], self.colors['match']])
+                    color=[self.colors['non_match'], self.colors['match']])
             
             plt.title(f'Raw Values (-1 to 1)', fontsize=14)
             plt.xlabel('Raw Value', fontsize=12)
@@ -409,14 +498,30 @@ class ReportGenerator:
             norm_pos = df[df['true_label'] == 1][f"{feature}_norm"]
             norm_neg = df[df['true_label'] == 0][f"{feature}_norm"]
             
+            # Data validation and outlier filtering
+            norm_pos = norm_pos.replace([np.inf, -np.inf], np.nan).dropna()
+            norm_neg = norm_neg.replace([np.inf, -np.inf], np.nan).dropna()
+            
+            # Calculate statistics for outlier detection
+            norm_pos_mean = norm_pos.mean()
+            norm_neg_mean = norm_neg.mean()
+            norm_pos_std = norm_pos.std()
+            norm_neg_std = norm_neg.std()
+            
+            # Filter outliers if we have valid statistics
+            if not np.isnan(norm_pos_std) and norm_pos_std > 0:
+                norm_pos = norm_pos[norm_pos.between(norm_pos_mean - 5 * norm_pos_std, norm_pos_mean + 5 * norm_pos_std)]
+            if not np.isnan(norm_neg_std) and norm_neg_std > 0:
+                norm_neg = norm_neg[norm_neg.between(norm_neg_mean - 5 * norm_neg_std, norm_neg_mean + 5 * norm_neg_std)]
+            
             if norm_pos.nunique() > 1 and norm_neg.nunique() > 1:
                 sns.histplot(norm_pos, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['match'], label='Match', edgecolor='white')
+                            color=self.colors['match'], label='Match', edgecolor='white', bins=bins)
                 sns.histplot(norm_neg, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white', bins=bins)
             else:
                 plt.bar(['Non-Match', 'Match'], [norm_neg.mean(), norm_pos.mean()], 
-                      color=[self.colors['non_match'], self.colors['match']])
+                    color=[self.colors['non_match'], self.colors['match']])
             
             plt.title(f'Domain-Normalized (0 to 1)', fontsize=14)
             plt.xlabel('Normalized Value', fontsize=12)
@@ -428,14 +533,30 @@ class ReportGenerator:
             std_pos = df[df['true_label'] == 1][feature]  # Main column has standardized values
             std_neg = df[df['true_label'] == 0][feature]
             
+            # Data validation and outlier filtering
+            std_pos = std_pos.replace([np.inf, -np.inf], np.nan).dropna()
+            std_neg = std_neg.replace([np.inf, -np.inf], np.nan).dropna()
+            
+            # Calculate statistics for outlier detection
+            std_pos_mean = std_pos.mean()
+            std_neg_mean = std_neg.mean()
+            std_pos_std = std_pos.std()
+            std_neg_std = std_neg.std()
+            
+            # Filter outliers if we have valid statistics
+            if not np.isnan(std_pos_std) and std_pos_std > 0:
+                std_pos = std_pos[std_pos.between(std_pos_mean - 5 * std_pos_std, std_pos_mean + 5 * std_pos_std)]
+            if not np.isnan(std_neg_std) and std_neg_std > 0:
+                std_neg = std_neg[std_neg.between(std_neg_mean - 5 * std_neg_std, std_neg_mean + 5 * std_neg_std)]
+            
             if std_pos.nunique() > 1 and std_neg.nunique() > 1:
                 sns.histplot(std_pos, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['match'], label='Match', edgecolor='white')
+                            color=self.colors['match'], label='Match', edgecolor='white', bins=bins)
                 sns.histplot(std_neg, kde=True, stat='density', alpha=0.6, 
-                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white', bins=bins)
             else:
                 plt.bar(['Non-Match', 'Match'], [std_neg.mean(), std_pos.mean()], 
-                      color=[self.colors['non_match'], self.colors['match']])
+                    color=[self.colors['non_match'], self.colors['match']])
             
             plt.title(f'StandardScaler Values', fontsize=14)
             plt.xlabel('Standardized Value', fontsize=12)
@@ -455,44 +576,7 @@ class ReportGenerator:
             logger.error(f"Error creating comparison plot for feature {feature}: {e}")
             import traceback
             logger.error(traceback.format_exc())
-    
-    def _create_feature_separation_plot(self, top_features, feature_separation):
-        """
-        Create a summary plot showing feature separation power.
-        
-        Args:
-            top_features (list): List of top features
-            feature_separation (dict): Dictionary of feature separation metrics
-        """
-        try:
-            plt.figure(figsize=(14, 8))
-            separations = [feature_separation[f]['separation'] for f in top_features]
-            
-            # Use the blue color palette for consistency
-            blues = plt.cm.Blues(np.linspace(0.6, 0.9, len(top_features)))
-            bars = plt.barh(top_features, separations, color=blues)
-            
-            # Add value labels
-            for bar in bars:
-                width = bar.get_width()
-                plt.text(width + 0.01, bar.get_y() + bar.get_height()/2,
-                        f'{width:.4f}', ha='left', va='center', fontsize=10)
-            
-            plt.title('Feature Separation Power (Higher = Better Class Separation)', fontsize=16)
-            plt.xlabel('Mean Absolute Difference Between Classes', fontsize=14)
-            plt.ylabel('Feature', fontsize=14)
-            plt.grid(axis='x', linestyle='--', alpha=0.3)
-            plt.tight_layout()
-            
-            # Save figure
-            plt.savefig(self.figures_dir / 'feature_separation_power.png', dpi=300, bbox_inches='tight')
-            plt.close()
-            logger.info("Created feature separation power plot")
-        
-        except Exception as e:
-            logger.error(f"Error creating feature separation plot: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            plt.close()  # Make sure to close the figure even if there's an error
     
     def _generate_metrics_report(self):
         """
@@ -922,6 +1006,7 @@ class ReportGenerator:
                             f.write(f"  - Confidence: {row['confidence']:.4f}\n")
                             f.write("  - Top Features:\n")
                             
+                            top_features = feature_cols[:3] if len(feature_cols) >= 3 else feature_cols
                             # Show top 3 features (if available)
                             for feature in top_features:
                                 raw_value = row.get(f"{feature}_raw", "N/A")

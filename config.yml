@@ -5,7 +5,7 @@
 # System Configuration
 system:
   mode: "dev"  # "dev" or "prod"
-  log_level: "DEBUG"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
   checkpoint_dir: "./checkpoints"
   output_dir: "./output"
   temp_dir: "./tmp"
@@ -138,7 +138,7 @@ features:
   normalize_features: true
   
   # Recursive feature elimination
-  rfe_enabled: false  # Disabled based on our debugging
+  rfe_enabled: true  # Disabled based on our debugging
   rfe_step_size: 1
   rfe_cv_folds: 5
   
