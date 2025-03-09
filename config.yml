@@ -184,7 +184,7 @@ feature_selection:
   include_all_cosine: false        # Include all *_cosine features
   include_all_levenshtein: false   # Include all *_levenshtein features
   include_all_harmonic: false       # Include all *_harmonic features
-  include_all_product: true        # Include all *_product features
+  include_all_product: false        # Include all *_product features
   include_all_ratio: false         # Include all *_ratio features
   include_all_birth_death: true    # Include all birth_death* features
   
