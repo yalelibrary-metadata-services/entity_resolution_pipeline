@@ -1,6 +1,6 @@
 # Entity Resolution Classification Metrics
 
-Generated: 2025-03-09 08:38:48
+Generated: 2025-03-09 08:54:25
 
 ## Feature Representations
 
@@ -14,22 +14,22 @@ This system uses multiple feature representations for clarity:
 
 | Metric | Value |
 |--------|-------|
-| Precision | 0.9970 |
-| Recall | 0.9997 |
-| F1 | 0.9984 |
-| Accuracy | 0.9984 |
+| Precision | 1.0000 |
+| Recall | 0.8803 |
+| F1 | 0.9364 |
+| Accuracy | 0.9398 |
 | Roc_auc | 0.9999 |
 
 ## Confusion Matrix
 
 | | Predicted Negative | Predicted Positive |
 |---------------------|--------------------|
-| **Actual Negative** | 11524 | 35 |
-| **Actual Positive** | 3 | 11706 |
+| **Actual Negative** | 11559 | 0 |
+| **Actual Positive** | 1401 | 10308 |
 
 ## Derived Metrics
 
-- **Accuracy**: 0.9984
-- **Precision**: 0.9970
-- **Recall**: 0.9997
-- **F1 Score**: 0.9984
+- **Accuracy**: 0.9398
+- **Precision**: 1.0000
+- **Recall**: 0.8803
+- **F1 Score**: 0.9364

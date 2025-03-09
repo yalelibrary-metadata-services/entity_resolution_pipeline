@@ -1,46 +1,38 @@
 {
   "title": "Entity Resolution Test Results Analysis",
-  "timestamp": "2025-03-09 08:38:50",
+  "timestamp": "2025-03-09 08:54:26",
   "total_test_instances": 23268,
-  "correct_count": 23230,
-  "error_count": 38,
-  "false_positive_count": 35,
-  "false_negative_count": 3,
-  "high_confidence_error_count": 14,
-  "high_confidence_fp_count": 14,
-  "high_confidence_fn_count": 0,
+  "correct_count": 21867,
+  "error_count": 1401,
+  "false_positive_count": 0,
+  "false_negative_count": 1401,
+  "high_confidence_error_count": 1317,
+  "high_confidence_fp_count": 0,
+  "high_confidence_fn_count": 1317,
   "confidence_stats": [
     {
       "true_label": 0,
       "predicted_label": 0,
-      "mean": 0.01157419709369369,
-      "min": 0.0001225641370002,
-      "max": 0.4827624857257022,
-      "count": 11524
-    },
-    {
-      "true_label": 0,
-      "predicted_label": 1,
-      "mean": 0.8020242985240317,
-      "min": 0.5529604029884913,
-      "max": 0.9854560105430348,
-      "count": 35
+      "mean": 0.017374781282686817,
+      "min": 0.0001388954088409,
+      "max": 0.9566745889356032,
+      "count": 11559
     },
     {
       "true_label": 1,
       "predicted_label": 0,
-      "mean": 0.3594282779979312,
-      "min": 0.2594542508934325,
-      "max": 0.4395083922566306,
-      "count": 3
+      "mean": 0.9021625787321148,
+      "min": 0.2507533630341095,
+      "max": 0.9599708884110072,
+      "count": 1401
     },
     {
       "true_label": 1,
       "predicted_label": 1,
-      "mean": 0.9847358535281074,
-      "min": 0.506165355044688,
-      "max": 0.999976678052131,
-      "count": 11706
+      "mean": 0.9954420815759455,
+      "min": 0.9600382924678336,
+      "max": 0.9999720370998506,
+      "count": 10308
     }
   ],
   "feature_representations": {
