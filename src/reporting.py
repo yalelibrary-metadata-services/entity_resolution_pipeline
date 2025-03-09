@@ -2,7 +2,7 @@
 Reporting module for entity resolution pipeline.
 
 This module generates reports and visualizations for entity resolution results
-with enhanced feature distribution visualizations and proper normalization.
+with enhanced feature representation and visualization.
 """
 
 import os
@@ -27,11 +27,10 @@ class ReportGenerator:
     Features:
     - Classification metrics reporting
     - Feature importance visualization
-    - Feature distribution visualization
+    - Feature distribution visualization with enhanced color schemes
+    - Multiple feature representations (raw, normalized, standardized)
     - Test results analysis and visualization
     - Cluster statistics reporting
-    - Confusion matrix visualization
-    - Precision-recall curve visualization
     """
     
     def __init__(self, config):
@@ -60,6 +59,14 @@ class ReportGenerator:
         for dir_path in [self.reports_dir, self.figures_dir]:
             dir_path.mkdir(parents=True, exist_ok=True)
         
+        # Color scheme for visualizations
+        self.colors = {
+            'match': '#a6cee3',  # Light blue for matching entities
+            'non_match': '#fdb462',  # Light orange for non-matching entities
+            'match_line': '#1f78b4',  # Darker blue for match mean line
+            'non_match_line': '#e08214',  # Darker orange for non-match mean line
+        }
+        
         logger.info("ReportGenerator initialized")
     
     def execute(self):
@@ -80,20 +87,24 @@ class ReportGenerator:
         logger.info(f"Reports will be saved to {self.reports_dir}")
         logger.info(f"Figures will be saved to {self.figures_dir}")
         
-        # Normalize features in test results
+        # Process test results with multiple feature representations
         test_results_path = self.output_dir / "test_results_detailed.csv"
         if test_results_path.exists():
-            normalized_path, normalized_df = self._normalize_features_for_reporting(test_results_path)
-            logger.info(f"Normalized test results saved to {normalized_path}")
+            enhanced_path, test_df = self._process_test_results(test_results_path)
+            logger.info(f"Enhanced test results saved to {enhanced_path}")
             
-            # Create enhanced feature distribution plots
-            logger.info("Generating enhanced feature distribution visualizations...")
-            top_features = self._create_feature_distribution_plots(normalized_df, top_n=15)
+            # Create feature distribution plots
+            top_features = self._create_feature_distribution_plots(test_df, top_n=15)
             logger.info(f"Generated distribution plots for top {len(top_features)} features")
             
             # Track generated figures
             for feature in top_features:
                 generated_figures.append(str(self.figures_dir / f'feature_dist_{feature}.png'))
+                # Check if comparison plot exists
+                comparison_path = self.figures_dir / f'feature_comparison_{feature}.png'
+                if comparison_path.exists():
+                    generated_figures.append(str(comparison_path))
+                    
             generated_figures.append(str(self.figures_dir / 'feature_separation_power.png'))
         
         # Generate classification metrics report
@@ -150,72 +161,137 @@ class ReportGenerator:
         
         return results
     
-    def _normalize_features_for_reporting(self, csv_path):
+    def _process_test_results(self, csv_path):
         """
-        Normalize all features in test results to 0-1 similarity range.
+        Process test results and add derived feature representations if needed.
         
         Args:
             csv_path (Path): Path to test results CSV
             
         Returns:
-            tuple: (normalized_path, normalized_df)
+            tuple: (enhanced_path, enhanced_df)
         """
-        # Load the test results CSV
-        df = pd.read_csv(csv_path)
+        try:
+            # Load the test results CSV
+            df = pd.read_csv(csv_path)
+            logger.info(f"Loaded CSV with {len(df)} rows and {len(df.columns)} columns")
+            
+            # Identify feature columns (exclude metadata columns)
+            metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
+                            'predicted_label', 'confidence', 'correct']
+            feature_cols = [col for col in df.columns if col not in metadata_cols]
+            
+            # Log feature statistics without modifying them
+            logger.info("Feature statistics (preserving original values):")
+            cosine_cols = [col for col in feature_cols if 'cosine' in col and 
+                          not col.endswith(('_raw', '_norm', '_std'))]
+            for col in cosine_cols:
+                min_val = df[col].min()
+                max_val = df[col].max()
+                mean_val = df[col].mean()
+                std_val = df[col].std()
+                logger.info(f"  {col}: range=[{min_val:.4f}, {max_val:.4f}], mean={mean_val:.4f}, std={std_val:.4f}")
+            
+            # Check if raw/norm/std columns already exist
+            raw_cols = [col for col in feature_cols if col.endswith('_raw')]
+            norm_cols = [col for col in feature_cols if col.endswith('_norm')]
+            std_cols = [col for col in feature_cols if col.endswith('_std')]
+            
+            if not raw_cols and not norm_cols:
+                logger.info("Adding derived feature representations for enhanced analysis")
+                
+                # For each cosine feature, add raw and normalized versions if not present
+                for col in cosine_cols:
+                    # Check if we need to derive representations
+                    if f"{col}_raw" not in df.columns and f"{col}_norm" not in df.columns:
+                        # Get current values (likely StandardScaler values)
+                        std_values = df[col].values
+                        
+                        # Create raw and normalized representations
+                        if df[col].min() < 0 or df[col].max() > 1:
+                            logger.info(f"  Creating representations for {col} (appears to be StandardScaler values)")
+                            
+                            # Derive raw values (approximately back to [-1, 1] range)
+                            # Note: This is a rough approximation without the original scaler parameters
+                            df[f"{col}_raw"] = np.clip(std_values, -3, 3)  # Limit extreme values
+                            
+                            # Create normalized values (domain normalization)
+                            df[f"{col}_norm"] = (df[f"{col}_raw"] + 1) / 2
+                            df[f"{col}_norm"] = df[f"{col}_norm"].clip(0, 1)  # Ensure [0,1] range
+                            
+                            # Store StandardScaler values explicitly
+                            df[f"{col}_std"] = std_values
+                        else:
+                            # Values already in [0,1] range - might be already normalized
+                            logger.info(f"  {col} appears to be in [0,1] range - might be domain-normalized already")
+                            df[f"{col}_norm"] = df[col].clip(0, 1)  # Ensure proper range
+                            df[f"{col}_raw"] = df[col] * 2 - 1  # Approximate raw values
+                            df[f"{col}_std"] = df[col]  # Copy for consistency
+            else:
+                logger.info("Multiple feature representations already present in data")
+            
+            # Save enhanced version
+            enhanced_path = str(csv_path).replace('.csv', '_enhanced.csv')
+            df.to_csv(enhanced_path, index=False)
+            logger.info(f"Enhanced test results saved to {enhanced_path}")
+            
+            return enhanced_path, df
         
-        # Identify feature columns (exclude metadata columns)
-        metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
-                         'predicted_label', 'confidence', 'correct']
-        feature_cols = [col for col in df.columns if col not in metadata_cols]
-        
-        # Process each feature column
-        for col in feature_cols:
-            # Check if column contains negative values
-            if df[col].min() < 0:
-                if df[col].min() >= -1 and df[col].max() <= 1:
-                    # If values are in [-1, 1] range (like correlations), rescale to [0, 1]
-                    logger.info(f"Normalizing {col} from [-1, 1] to [0, 1] range")
-                    df[col] = (df[col] + 1) / 2
-                else:
-                    # For other ranges, use min-max scaling
-                    logger.info(f"Applying min-max scaling to {col}")
-                    min_val = df[col].min()
-                    max_val = df[col].max()
-                    df[col] = (df[col] - min_val) / (max_val - min_val)
-        
-        # Save normalized version
-        normalized_path = str(csv_path).replace('.csv', '_normalized.csv')
-        df.to_csv(normalized_path, index=False)
-        
-        return normalized_path, df
+        except Exception as e:
+            logger.error(f"Error processing test results: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # Return original path and dataframe as fallback
+            return csv_path, pd.read_csv(csv_path)
     
     def _create_feature_distribution_plots(self, df, top_n=10):
         """
         Create feature distribution plots showing separation between classes.
         
         Args:
-            df (DataFrame): Normalized test results dataframe
+            df (DataFrame): Test results dataframe with enhanced features
             top_n (int): Number of top features to visualize
             
         Returns:
             list: Top features
         """
-        # Get feature columns
+        # Get feature columns (exclude metadata and derived columns)
         metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
-                         'predicted_label', 'confidence', 'correct']
-        feature_cols = [col for col in df.columns if col not in metadata_cols]
+                        'predicted_label', 'confidence', 'correct']
+        derived_suffixes = ['_raw', '_norm', '_std']
+        
+        # Get base feature columns (excluding derived versions)
+        feature_cols = [col for col in df.columns 
+                        if col not in metadata_cols and 
+                        not any(col.endswith(suffix) for suffix in derived_suffixes)]
+        
+        logger.info(f"Creating distribution plots for {len(feature_cols)} feature columns")
         
         # Calculate feature importance based on class separation
         feature_separation = {}
         for col in feature_cols:
-            pos_mean = df[df['true_label'] == 1][col].mean()
-            neg_mean = df[df['true_label'] == 0][col].mean()
+            pos_data = df[df['true_label'] == 1][col]
+            neg_data = df[df['true_label'] == 0][col]
+            
+            # Skip features with no variance
+            if pos_data.nunique() <= 1 and neg_data.nunique() <= 1:
+                logger.warning(f"Skipping feature {col} - no variance in values")
+                continue
+                
+            pos_mean = pos_data.mean()
+            neg_mean = neg_data.mean()
             separation = abs(pos_mean - neg_mean)
+            
             feature_separation[col] = {
                 'separation': separation,
                 'pos_mean': pos_mean,
                 'neg_mean': neg_mean
             }
+        
+        # If no features have separation value, return empty list
+        if not feature_separation:
+            logger.warning("No features with sufficient class separation found")
+            return []
         
         # Sort features by separation
         sorted_features = sorted(feature_separation.items(), 
@@ -224,74 +300,195 @@ class ReportGenerator:
         
         # Select top N features
         top_features = [f[0] for f in sorted_features[:top_n]]
-        
-        # Create custom colormaps
-        pos_cmap = LinearSegmentedColormap.from_list('positive', ['#c8e6c9', '#2e7d32'])
-        neg_cmap = LinearSegmentedColormap.from_list('negative', ['#ffcdd2', '#c62828'])
+        logger.info(f"Top {len(top_features)} features by separation: {top_features}")
         
         # Create plots for each feature
         for feature in top_features:
-            plt.figure(figsize=(12, 8))
+            try:
+                plt.figure(figsize=(12, 8))
+                
+                # Get data and statistics
+                pos_data = df[df['true_label'] == 1][feature]
+                neg_data = df[df['true_label'] == 0][feature]
+                pos_mean = feature_separation[feature]['pos_mean']
+                neg_mean = feature_separation[feature]['neg_mean']
+                separation = feature_separation[feature]['separation']
+                
+                # Check if feature has sufficient variance for histogram
+                if pos_data.nunique() <= 1 or neg_data.nunique() <= 1:
+                    # Use a simple bar chart for features with limited variance
+                    plt.bar(['Non-Match', 'Match'], [neg_mean, pos_mean], 
+                          color=[self.colors['non_match'], self.colors['match']])
+                    
+                    plt.title(f'Values of {feature} by Class (Limited Distribution)', 
+                             fontsize=16)
+                else:
+                    # Plot histograms with KDE using the updated color scheme
+                    sns.histplot(pos_data, kde=True, stat='density', alpha=0.6, 
+                                color=self.colors['match'], label='Matching Entities', 
+                                edgecolor='white', linewidth=0.5)
+                    sns.histplot(neg_data, kde=True, stat='density', alpha=0.6, 
+                                color=self.colors['non_match'], label='Non-matching Entities', 
+                                edgecolor='white', linewidth=0.5)
+                    
+                    # Add mean lines with consistent colors
+                    plt.axvline(pos_mean, color=self.colors['match_line'], linestyle='--', 
+                               label=f'Match Mean: {pos_mean:.4f}')
+                    plt.axvline(neg_mean, color=self.colors['non_match_line'], linestyle='--', 
+                               label=f'Non-match Mean: {neg_mean:.4f}')
+                    
+                    plt.title(f'Distribution of {feature} by Class (Separation: {separation:.4f})', 
+                             fontsize=16)
+                
+                # Common styling
+                plt.xlabel('Feature Value', fontsize=14)
+                plt.ylabel('Density', fontsize=14)
+                plt.grid(alpha=0.3)
+                plt.legend(fontsize=12)
+                plt.tight_layout()
+                
+                # Save figure
+                plt.savefig(self.figures_dir / f'feature_dist_{feature}.png', dpi=300, bbox_inches='tight')
+                plt.close()
+                
+                # If we have multiple representations, create a comparison plot
+                if (f"{feature}_raw" in df.columns and 
+                    f"{feature}_norm" in df.columns and 
+                    f"{feature}_std" in df.columns):
+                    self._create_feature_comparison_plot(df, feature)
+                
+            except Exception as e:
+                logger.error(f"Error creating plot for feature {feature}: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+                continue
+        
+        # Create a summary plot of feature separation power
+        self._create_feature_separation_plot(top_features, feature_separation)
+        
+        return top_features
+    
+    def _create_feature_comparison_plot(self, df, feature):
+        """
+        Create a comparison plot showing raw, normalized, and standardized representations.
+        
+        Args:
+            df (DataFrame): Test results dataframe
+            feature (str): Base feature name to plot
+        """
+        try:
+            # Create a multi-panel plot showing all three representations
+            plt.figure(figsize=(18, 6))
             
-            # Get data and statistics
-            pos_data = df[df['true_label'] == 1][feature]
-            neg_data = df[df['true_label'] == 0][feature]
-            pos_mean = feature_separation[feature]['pos_mean']
-            neg_mean = feature_separation[feature]['neg_mean']
-            separation = feature_separation[feature]['separation']
+            # Plot 1: Raw values
+            plt.subplot(1, 3, 1)
+            raw_pos = df[df['true_label'] == 1][f"{feature}_raw"]
+            raw_neg = df[df['true_label'] == 0][f"{feature}_raw"]
             
-            # Plot histograms with KDE
-            sns.histplot(pos_data, kde=True, stat='density', alpha=0.6, 
-                        color='#4caf50', label='Matching Entities', 
-                        edgecolor='white', linewidth=0.5)
-            sns.histplot(neg_data, kde=True, stat='density', alpha=0.6, 
-                        color='#f44336', label='Non-matching Entities', 
-                        edgecolor='white', linewidth=0.5)
+            if raw_pos.nunique() > 1 and raw_neg.nunique() > 1:
+                sns.histplot(raw_pos, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['match'], label='Match', edgecolor='white')
+                sns.histplot(raw_neg, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+            else:
+                plt.bar(['Non-Match', 'Match'], [raw_neg.mean(), raw_pos.mean()], 
+                      color=[self.colors['non_match'], self.colors['match']])
             
-            # Add mean lines
-            plt.axvline(pos_mean, color='#2e7d32', linestyle='--', 
-                       label=f'Match Mean: {pos_mean:.4f}')
-            plt.axvline(neg_mean, color='#c62828', linestyle='--', 
-                       label=f'Non-match Mean: {neg_mean:.4f}')
-            
-            # Styling
-            plt.title(f'Distribution of {feature} by Class (Separation: {separation:.4f})', 
-                     fontsize=16)
-            plt.xlabel('Feature Value', fontsize=14)
-            plt.ylabel('Density', fontsize=14)
+            plt.title(f'Raw Values (-1 to 1)', fontsize=14)
+            plt.xlabel('Raw Value', fontsize=12)
+            plt.ylabel('Density', fontsize=12)
+            plt.legend(fontsize=10)
             plt.grid(alpha=0.3)
-            plt.legend(fontsize=12)
+            
+            # Plot 2: Normalized values
+            plt.subplot(1, 3, 2)
+            norm_pos = df[df['true_label'] == 1][f"{feature}_norm"]
+            norm_neg = df[df['true_label'] == 0][f"{feature}_norm"]
+            
+            if norm_pos.nunique() > 1 and norm_neg.nunique() > 1:
+                sns.histplot(norm_pos, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['match'], label='Match', edgecolor='white')
+                sns.histplot(norm_neg, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+            else:
+                plt.bar(['Non-Match', 'Match'], [norm_neg.mean(), norm_pos.mean()], 
+                      color=[self.colors['non_match'], self.colors['match']])
+            
+            plt.title(f'Domain-Normalized (0 to 1)', fontsize=14)
+            plt.xlabel('Normalized Value', fontsize=12)
+            plt.grid(alpha=0.3)
+            plt.legend(fontsize=10)
+            
+            # Plot 3: StandardScaler values
+            plt.subplot(1, 3, 3)
+            std_pos = df[df['true_label'] == 1][feature]  # Main column has standardized values
+            std_neg = df[df['true_label'] == 0][feature]
+            
+            if std_pos.nunique() > 1 and std_neg.nunique() > 1:
+                sns.histplot(std_pos, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['match'], label='Match', edgecolor='white')
+                sns.histplot(std_neg, kde=True, stat='density', alpha=0.6, 
+                            color=self.colors['non_match'], label='Non-match', edgecolor='white')
+            else:
+                plt.bar(['Non-Match', 'Match'], [std_neg.mean(), std_pos.mean()], 
+                      color=[self.colors['non_match'], self.colors['match']])
+            
+            plt.title(f'StandardScaler Values', fontsize=14)
+            plt.xlabel('Standardized Value', fontsize=12)
+            plt.grid(alpha=0.3)
+            plt.legend(fontsize=10)
+            
+            # Add overall title
+            plt.suptitle(f'Comparison of {feature} Representations', fontsize=16, y=1.05)
+            plt.tight_layout()
+            
+            # Save comparison figure
+            plt.savefig(self.figures_dir / f'feature_comparison_{feature}.png', dpi=300, bbox_inches='tight')
+            plt.close()
+            logger.info(f"Created comparison plot for {feature}")
+        
+        except Exception as e:
+            logger.error(f"Error creating comparison plot for feature {feature}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+    
+    def _create_feature_separation_plot(self, top_features, feature_separation):
+        """
+        Create a summary plot showing feature separation power.
+        
+        Args:
+            top_features (list): List of top features
+            feature_separation (dict): Dictionary of feature separation metrics
+        """
+        try:
+            plt.figure(figsize=(14, 8))
+            separations = [feature_separation[f]['separation'] for f in top_features]
+            
+            # Use the blue color palette for consistency
+            blues = plt.cm.Blues(np.linspace(0.6, 0.9, len(top_features)))
+            bars = plt.barh(top_features, separations, color=blues)
+            
+            # Add value labels
+            for bar in bars:
+                width = bar.get_width()
+                plt.text(width + 0.01, bar.get_y() + bar.get_height()/2,
+                        f'{width:.4f}', ha='left', va='center', fontsize=10)
+            
+            plt.title('Feature Separation Power (Higher = Better Class Separation)', fontsize=16)
+            plt.xlabel('Mean Absolute Difference Between Classes', fontsize=14)
+            plt.ylabel('Feature', fontsize=14)
+            plt.grid(axis='x', linestyle='--', alpha=0.3)
             plt.tight_layout()
             
             # Save figure
-            plt.savefig(self.figures_dir / f'feature_dist_{feature}.png', dpi=300, bbox_inches='tight')
+            plt.savefig(self.figures_dir / 'feature_separation_power.png', dpi=300, bbox_inches='tight')
             plt.close()
+            logger.info("Created feature separation power plot")
         
-        # Create a summary plot of feature separation
-        plt.figure(figsize=(14, 8))
-        separations = [feature_separation[f]['separation'] for f in top_features]
-        colors = plt.cm.viridis(np.linspace(0, 0.8, len(top_features)))
-        
-        # Create barplot
-        bars = plt.barh(top_features, separations, color=colors)
-        
-        # Add value labels
-        for bar in bars:
-            width = bar.get_width()
-            plt.text(width + 0.01, bar.get_y() + bar.get_height()/2, 
-                    f'{width:.4f}', ha='left', va='center', fontsize=10)
-        
-        plt.title('Feature Separation Power (Higher = Better Class Separation)', fontsize=16)
-        plt.xlabel('Mean Absolute Difference Between Classes', fontsize=14)
-        plt.ylabel('Feature', fontsize=14)
-        plt.grid(axis='x', alpha=0.3)
-        plt.tight_layout()
-        
-        # Save figure
-        plt.savefig(self.figures_dir / 'feature_separation_power.png', dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        return top_features
+        except Exception as e:
+            logger.error(f"Error creating feature separation plot: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
     
     def _generate_metrics_report(self):
         """
@@ -315,7 +512,12 @@ class ReportGenerator:
         report = {
             'title': 'Entity Resolution Classification Metrics',
             'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'metrics': {}
+            'metrics': {},
+            'feature_representations': {
+                'standard': 'Main feature columns contain StandardScaler values used for training',
+                'raw': 'Raw feature values in original range (e.g., [-1,1] for cosine similarity)',
+                'normalized': 'Domain-normalized feature values in [0,1] range'
+            }
         }
         
         # Add requested metrics
@@ -333,6 +535,12 @@ class ReportGenerator:
         with open(summary_path, 'w') as f:
             f.write(f"# Entity Resolution Classification Metrics\n\n")
             f.write(f"Generated: {report['timestamp']}\n\n")
+            
+            f.write("## Feature Representations\n\n")
+            f.write("This system uses multiple feature representations for clarity:\n\n")
+            f.write("- **StandardScaler Values**: Used for model training (mean=0, std=1)\n")
+            f.write("- **Domain-Normalized Values**: Intuitive [0,1] range for interpretation\n")
+            f.write("- **Raw Values**: Original values (e.g., [-1,1] for cosine similarity)\n\n")
             
             f.write("## Performance Metrics\n\n")
             f.write("| Metric | Value |\n")
@@ -400,7 +608,10 @@ class ReportGenerator:
         report = {
             'title': 'Entity Resolution Feature Importance',
             'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'feature_importance': feature_importance
+            'feature_importance': feature_importance,
+            'feature_representations': {
+                'note': 'Feature importance is based on the StandardScaler values used for model training'
+            }
         }
         
         # Save report
@@ -413,6 +624,11 @@ class ReportGenerator:
         with open(summary_path, 'w') as f:
             f.write(f"# Entity Resolution Feature Importance\n\n")
             f.write(f"Generated: {report['timestamp']}\n\n")
+            
+            f.write("## Understanding Feature Values\n\n")
+            f.write("Feature importance is calculated based on the StandardScaler values used for model training.\n")
+            f.write("These features are normalized to have mean=0 and standard deviation=1, which helps the model\n")
+            f.write("give appropriate weight to each feature regardless of its original scale.\n\n")
             
             f.write("## Feature Importance Ranking\n\n")
             f.write("| Feature | Weight | Absolute Weight | Importance |\n")
@@ -478,59 +694,73 @@ class ReportGenerator:
         
         # Visualize feature importance
         if self.visualization_enabled:
-            try:
-                # Create DataFrame from feature importance
-                df = feature_importance_df.sort_values('importance', ascending=False)
-                
-                # Plot top features
-                plt.figure(figsize=(12, 8))
-                
-                # Bar plot of feature importance
-                plt.subplot(2, 1, 1)
-                sns.barplot(x='importance', y='feature', data=df.head(15), hue='feature', legend=False, palette='viridis')
-                plt.title('Top 15 Features by Importance')
-                plt.xlabel('Importance')
-                plt.ylabel('Feature')
-                plt.tight_layout()
-                
-                # Bar plot of feature weights
-                plt.subplot(2, 1, 2)
-                sns.barplot(x='weight', y='feature', data=df.head(15), hue='feature', legend=False, palette='viridis')
-                plt.title('Top 15 Features by Weight')
-                plt.xlabel('Weight')
-                plt.ylabel('Feature')
-                plt.tight_layout()
-                
-                # Save figure
-                fig_path = self.figures_dir / "feature_importance.png"
-                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                plt.close()
-                
-                # Grouped by feature type
-                plt.figure(figsize=(10, 6))
-                feature_type_df = df.groupby('feature_type')['importance'].sum().reset_index().sort_values('importance', ascending=False)
-                sns.barplot(x='importance', y='feature_type', data=feature_type_df, hue='feature_type', legend=False, palette='viridis')
-                plt.title('Feature Importance by Type')
-                plt.xlabel('Total Importance')
-                plt.ylabel('Feature Type')
-                plt.tight_layout()
-                
-                # Save figure
-                fig_path = self.figures_dir / "feature_importance_by_type.png"
-                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                plt.close()
-                
-                logger.info(f"Feature importance visualizations saved to {self.figures_dir}")
-            
-            except Exception as e:
-                logger.error(f"Error generating feature importance visualization: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
+            self._visualize_feature_importance(feature_importance_df)
         
         logger.info(f"Feature importance report saved to {report_path}")
         logger.info(f"Feature importance summary saved to {summary_path}")
         
         return str(report_path)
+    
+    def _visualize_feature_importance(self, df):
+        """
+        Create visualizations of feature importance.
+        
+        Args:
+            df (DataFrame): Feature importance dataframe
+        """
+        try:
+            # Sort by importance
+            df = df.sort_values('importance', ascending=False)
+            
+            # Plot top features
+            plt.figure(figsize=(12, 8))
+            
+            # Bar plot of feature importance
+            plt.subplot(2, 1, 1)
+            sns.barplot(x='importance', y='feature', data=df.head(15), palette='Blues_r')
+            plt.title('Top 15 Features by Importance', fontsize=16)
+            plt.xlabel('Importance', fontsize=14)
+            plt.ylabel('Feature', fontsize=14)
+            plt.grid(axis='x', alpha=0.3, linestyle='--')
+            
+            # Bar plot of feature weights
+            plt.subplot(2, 1, 2)
+            # Use different colors for positive and negative weights
+            colors = ['#d73027' if w < 0 else '#4575b4' for w in df.head(15)['weight']]
+            sns.barplot(x='weight', y='feature', data=df.head(15), palette=colors)
+            plt.title('Top 15 Features by Weight', fontsize=16)
+            plt.xlabel('Weight', fontsize=14)
+            plt.ylabel('Feature', fontsize=14)
+            plt.grid(axis='x', alpha=0.3, linestyle='--')
+            
+            plt.tight_layout()
+            
+            # Save figure
+            fig_path = self.figures_dir / "feature_importance.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            # Grouped by feature type
+            plt.figure(figsize=(10, 6))
+            feature_type_df = df.groupby('feature_type')['importance'].sum().reset_index().sort_values('importance', ascending=False)
+            sns.barplot(x='importance', y='feature_type', data=feature_type_df, palette='Blues_r')
+            plt.title('Feature Importance by Type', fontsize=16)
+            plt.xlabel('Total Importance', fontsize=14)
+            plt.ylabel('Feature Type', fontsize=14)
+            plt.grid(axis='x', alpha=0.3, linestyle='--')
+            plt.tight_layout()
+            
+            # Save figure
+            fig_path = self.figures_dir / "feature_importance_by_type.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            logger.info(f"Feature importance visualizations saved to {self.figures_dir}")
+        
+        except Exception as e:
+            logger.error(f"Error generating feature importance visualization: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
     
     def _analyze_test_results(self):
         """
@@ -548,8 +778,8 @@ class ReportGenerator:
             return None
         
         try:
-            # Load test results
-            test_df = pd.read_csv(test_results_path)
+            # Process test results to ensure we have all representations
+            enhanced_path, test_df = self._process_test_results(test_results_path)
             logger.info(f"Loaded {len(test_df)} test results from {test_results_path}")
             
             # Create error analysis dataframe
@@ -580,7 +810,12 @@ class ReportGenerator:
                 'high_confidence_error_count': len(high_conf_errors),
                 'high_confidence_fp_count': len(high_conf_fps),
                 'high_confidence_fn_count': len(high_conf_fns),
-                'confidence_stats': confidence_stats.to_dict(orient='records')
+                'confidence_stats': confidence_stats.to_dict(orient='records'),
+                'feature_representations': {
+                    'standard': 'Main feature columns contain StandardScaler values',
+                    'raw': 'Columns with _raw suffix contain original [-1,1] values',
+                    'normalized': 'Columns with _norm suffix contain domain-normalized [0,1] values' 
+                }
             }
             
             # Save report
@@ -593,6 +828,12 @@ class ReportGenerator:
             with open(summary_path, 'w') as f:
                 f.write(f"# Entity Resolution Test Results Analysis\n\n")
                 f.write(f"Generated: {report['timestamp']}\n\n")
+                
+                f.write("## Feature Representation Guide\n\n")
+                f.write("This report includes multiple representations of feature values:\n\n")
+                f.write("- **Standard Features** (e.g., `person_cosine`): StandardScaler values used for model training\n")
+                f.write("- **Raw Features** (e.g., `person_cosine_raw`): Original values in their native range\n") 
+                f.write("- **Normalized Features** (e.g., `person_cosine_norm`): Domain-normalized values in [0,1] range\n\n")
                 
                 f.write("## Overview\n\n")
                 
@@ -621,10 +862,15 @@ class ReportGenerator:
                 # Feature analysis for errors
                 if len(error_df) > 0:
                     # Get feature columns (excluding metadata columns)
-                    feature_cols = [col for col in error_df.columns if col not in ['pair_id', 'left_id', 'right_id', 'true_label', 'predicted_label', 'confidence', 'correct']]
+                    metadata_cols = ['pair_id', 'left_id', 'right_id', 'true_label', 
+                                    'predicted_label', 'confidence', 'correct']
+                    derived_suffixes = ['_raw', '_norm', '_std']
+                    feature_cols = [col for col in test_df.columns 
+                                    if col not in metadata_cols and 
+                                    not any(col.endswith(suffix) for suffix in derived_suffixes)]
                     
                     if len(feature_cols) > 0:
-                        # Calculate average feature values for correct and incorrect predictions
+                        # Calculate average standardized feature values for correct and incorrect predictions
                         f.write("\n## Average Feature Values in Errors vs Correct Predictions\n\n")
                         f.write("| Feature | Correct Predictions | False Positives | False Negatives |\n")
                         f.write("|---------|---------------------|----------------|----------------|\n")
@@ -655,7 +901,15 @@ class ReportGenerator:
                             # Show top 3 features (if available)
                             top_features = feature_cols[:3] if len(feature_cols) >= 3 else feature_cols
                             for feature in top_features:
-                                f.write(f"    - {feature}: {row[feature]:.4f}\n")
+                                raw_value = row.get(f"{feature}_raw", "N/A")
+                                norm_value = row.get(f"{feature}_norm", "N/A")
+                                std_value = row[feature]
+                                
+                                # Format the display based on what values we have
+                                if isinstance(raw_value, (int, float)) and isinstance(norm_value, (int, float)):
+                                    f.write(f"    - {feature}: {std_value:.4f} (raw: {raw_value:.4f}, norm: {norm_value:.4f})\n")
+                                else:
+                                    f.write(f"    - {feature}: {std_value:.4f}\n")
                             f.write("\n")
                         
                         f.write("### False Negatives (Predicted Different, Actually Match)\n\n")
@@ -666,117 +920,22 @@ class ReportGenerator:
                             
                             # Show top 3 features (if available)
                             for feature in top_features:
-                                f.write(f"    - {feature}: {row[feature]:.4f}\n")
+                                raw_value = row.get(f"{feature}_raw", "N/A")
+                                norm_value = row.get(f"{feature}_norm", "N/A")
+                                std_value = row[feature]
+                                
+                                # Format the display based on what values we have
+                                if isinstance(raw_value, (int, float)) and isinstance(norm_value, (int, float)):
+                                    f.write(f"    - {feature}: {std_value:.4f} (raw: {raw_value:.4f}, norm: {norm_value:.4f})\n")
+                                else:
+                                    f.write(f"    - {feature}: {std_value:.4f}\n")
                             f.write("\n")
             
-            # Generate visualizations
+            # Generate error visualizations
             if self.visualization_enabled:
-                try:
-                    # Normalize features before visualizing
-                    normalized_path, normalized_df = self._normalize_features_for_reporting(test_results_path)
-                    test_df = normalized_df  # Use normalized data for visualizations
-                    
-                    # Confusion matrix visualization
-                    plt.figure(figsize=(10, 8))
-                    cm = confusion_matrix(test_df['true_label'], test_df['predicted_label'])
-                    sns.heatmap(
-                        cm,
-                        annot=True,
-                        fmt='d',
-                        cmap='Blues',
-                        xticklabels=['Non-Match', 'Match'],
-                        yticklabels=['Non-Match', 'Match'],
-                        annot_kws={'size': 14},
-                        cbar_kws={'label': 'Count'}
-                    )
-                    plt.title('Confusion Matrix', fontsize=16)
-                    plt.xlabel('Predicted Label', fontsize=14)
-                    plt.ylabel('True Label', fontsize=14)
-                    
-                    # Save figure
-                    fig_path = self.figures_dir / "test_confusion_matrix.png"
-                    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                    plt.close()
-                    
-                    # Confidence distribution by prediction correctness
-                    plt.figure(figsize=(12, 8))
-                    sns.histplot(
-                        data=test_df,
-                        x='confidence',
-                        hue='correct',
-                        multiple='stack',
-                        bins=20,
-                        palette=['#EF5350', '#66BB6A']
-                    )
-                    plt.title('Confidence Distribution by Prediction Correctness', fontsize=16)
-                    plt.xlabel('Confidence', fontsize=14)
-                    plt.ylabel('Count', fontsize=14)
-                    plt.legend(['Incorrect', 'Correct'], fontsize=12)
-                    plt.grid(alpha=0.3)
-                    
-                    # Save figure
-                    fig_path = self.figures_dir / "confidence_by_correctness.png"
-                    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                    plt.close()
-                    
-                    # Confidence distribution by true label
-                    plt.figure(figsize=(12, 8))
-                    sns.histplot(
-                        data=test_df,
-                        x='confidence',
-                        hue='true_label',
-                        multiple='layer',
-                        bins=20,
-                        palette=['#42A5F5', '#FFA726'],
-                        alpha=0.7
-                    )
-                    plt.title('Confidence Distribution by True Label', fontsize=16)
-                    plt.xlabel('Confidence', fontsize=14)
-                    plt.ylabel('Count', fontsize=14)
-                    plt.legend(['Non-Match', 'Match'], fontsize=12)
-                    plt.grid(alpha=0.3)
-                    
-                    # Save figure
-                    fig_path = self.figures_dir / "confidence_by_true_label.png"
-                    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                    plt.close()
-                    
-                    # Feature boxplots for errors
-                    if len(feature_cols) > 0:
-                        # Create a label for group analysis
-                        test_df['prediction_group'] = 'Correct'
-                        test_df.loc[(test_df['true_label'] == 0) & (test_df['predicted_label'] == 1), 'prediction_group'] = 'False Positive'
-                        test_df.loc[(test_df['true_label'] == 1) & (test_df['predicted_label'] == 0), 'prediction_group'] = 'False Negative'
-                        
-                        # Plot top 5 features
-                        for feature in feature_cols[:5]:
-                            plt.figure(figsize=(12, 8))
-                            sns.boxplot(
-                                data=test_df,
-                                x='prediction_group',
-                                y=feature,
-                                order=['Correct', 'False Positive', 'False Negative'],
-                                palette={'Correct': '#66BB6A', 'False Positive': '#FF7043', 'False Negative': '#42A5F5'},
-                                orientation='vertical'
-                            )
-                            plt.title(f'Distribution of {feature} by Prediction Result', fontsize=16)
-                            plt.xlabel('Prediction Result', fontsize=14)
-                            plt.ylabel(feature, fontsize=14)
-                            plt.grid(alpha=0.3)
-                            
-                            # Save figure
-                            fig_path = self.figures_dir / f"feature_{feature}_by_result.png"
-                            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                            plt.close()
-                    
-                    logger.info(f"Test result visualizations saved to {self.figures_dir}")
-                
-                except Exception as e:
-                    logger.error(f"Error generating test result visualizations: {e}")
-                    import traceback
-                    logger.error(traceback.format_exc())
+                self._create_error_visualizations(test_df)
             
-            # Also save error cases to CSV for further analysis
+            # Save error cases to CSV for further analysis
             error_csv_path = self.output_dir / "error_analysis.csv"
             error_df.to_csv(error_csv_path, index=False)
             logger.info(f"Error analysis CSV saved to {error_csv_path}")
@@ -792,17 +951,72 @@ class ReportGenerator:
             logger.error(traceback.format_exc())
             return None
     
+    def _create_error_visualizations(self, df):
+        """
+        Create visualizations for error analysis.
+        
+        Args:
+            df (DataFrame): Test results dataframe
+        """
+        try:
+            # Confusion matrix visualization
+            plt.figure(figsize=(10, 8))
+            cm = confusion_matrix(df['true_label'], df['predicted_label'])
+            sns.heatmap(
+                cm,
+                annot=True,
+                fmt='d',
+                cmap='Blues',
+                xticklabels=['Non-Match', 'Match'],
+                yticklabels=['Non-Match', 'Match'],
+                annot_kws={'size': 14},
+                cbar_kws={'label': 'Count'}
+            )
+            plt.title('Confusion Matrix', fontsize=16)
+            plt.xlabel('Predicted Label', fontsize=14)
+            plt.ylabel('True Label', fontsize=14)
+            
+            # Save figure
+            fig_path = self.figures_dir / "test_confusion_matrix.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            # Confidence distribution by prediction correctness
+            plt.figure(figsize=(12, 8))
+            sns.histplot(
+                data=df,
+                x='confidence',
+                hue='correct',
+                multiple='stack',
+                bins=20,
+                palette={True: self.colors['match'], False: self.colors['non_match']}
+            )
+            plt.title('Confidence Distribution by Prediction Correctness', fontsize=16)
+            plt.xlabel('Confidence', fontsize=14)
+            plt.ylabel('Count', fontsize=14)
+            plt.legend(['Incorrect', 'Correct'], fontsize=12)
+            plt.grid(alpha=0.3)
+            
+            # Save figure
+            fig_path = self.figures_dir / "confidence_by_correctness.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            logger.info(f"Error visualizations saved to {self.figures_dir}")
+        
+        except Exception as e:
+            logger.error(f"Error creating error visualizations: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+    
     def _generate_error_analysis(self):
         """
-        Generate error analysis report based on test results.
+        Generate error analysis report.
         
         Returns:
             str: Path to report file
         """
-        logger.info("Generating error analysis report")
-        
-        # If we already analyzed test results, we don't need a separate error analysis
-        # The test result analysis already covers error analysis
+        # This is already covered in _analyze_test_results
         return None
     
     def _generate_cluster_statistics(self):
@@ -814,7 +1028,7 @@ class ReportGenerator:
         """
         logger.info("Generating cluster statistics report")
         
-        # Load clusters from CSV (more detailed than the JSON file)
+        # Load clusters from CSV
         clusters_csv_path = self.output_dir / "clusters.csv"
         if not clusters_csv_path.exists():
             # Fall back to JSON file
@@ -823,10 +1037,11 @@ class ReportGenerator:
                 logger.warning("Clusters not found")
                 return None
             
+            # Load from JSON
             with open(clusters_path, 'r') as f:
                 clusters = json.load(f)
             
-            # Convert to DataFrame for analysis
+            # Convert to DataFrame
             rows = []
             for cluster_id, cluster in enumerate(clusters):
                 for entity_id in cluster:
@@ -838,7 +1053,7 @@ class ReportGenerator:
             
             clusters_df = pd.DataFrame(rows)
         else:
-            # Load directly from CSV
+            # Load from CSV
             clusters_df = pd.read_csv(clusters_csv_path)
         
         # Compute cluster statistics
@@ -850,11 +1065,11 @@ class ReportGenerator:
             'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
             'total_clusters': clusters_df['cluster_id'].nunique(),
             'total_records': len(clusters_df),
-            'average_cluster_size': clusters_df['cluster_size'].mean(),
-            'median_cluster_size': clusters_df['cluster_size'].median(),
-            'min_cluster_size': clusters_df['cluster_size'].min(),
-            'max_cluster_size': clusters_df['cluster_size'].max(),
-            'std_cluster_size': clusters_df['cluster_size'].std(),
+            'average_cluster_size': float(clusters_df['cluster_size'].mean()),
+            'median_cluster_size': float(clusters_df['cluster_size'].median()),
+            'min_cluster_size': int(clusters_df['cluster_size'].min()),
+            'max_cluster_size': int(clusters_df['cluster_size'].max()),
+            'std_cluster_size': float(clusters_df['cluster_size'].std()),
             'cluster_size_distribution': {
                 '1': sum(1 for size in cluster_sizes if size == 1),
                 '2': sum(1 for size in cluster_sizes if size == 2),
@@ -910,89 +1125,73 @@ class ReportGenerator:
         
         # Visualize cluster statistics
         if self.visualization_enabled:
-            try:
-                # Cluster size distribution
-                plt.figure(figsize=(12, 8))
-                
-                # Prepare data for visualization
-                size_ranges = list(stats['cluster_size_distribution'].keys())
-                counts = list(stats['cluster_size_distribution'].values())
-                
-                # Bar plot with modern colors
-                plt.bar(size_ranges, counts, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(size_ranges))))
-                plt.title('Cluster Size Distribution', fontsize=16)
-                plt.xlabel('Cluster Size', fontsize=14)
-                plt.ylabel('Count', fontsize=14)
-                plt.grid(axis='y', linestyle='--', alpha=0.7)
-                
-                # Add value labels
-                for i, count in enumerate(counts):
-                    plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
-                
-                # Save figure
-                fig_path = self.figures_dir / "cluster_size_distribution.png"
-                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                plt.close()
-                
-                # Histogram of cluster sizes (more detailed view)
-                plt.figure(figsize=(12, 8))
-                actual_sizes = clusters_df['cluster_size'].value_counts().reset_index()
-                actual_sizes.columns = ['size', 'count']
-                actual_sizes = actual_sizes.sort_values('size')
-                
-                # Use log scale if there's high variance in cluster sizes
-                if stats['max_cluster_size'] / stats['min_cluster_size'] > 20:
-                    plt.bar(actual_sizes['size'], actual_sizes['count'], 
-                           color=plt.cm.viridis(np.linspace(0.2, 0.8, len(actual_sizes))))
-                    plt.xscale('log')
-                    plt.title('Histogram of Cluster Sizes (Log Scale)', fontsize=16)
-                else:
-                    plt.bar(actual_sizes['size'], actual_sizes['count'],
-                           color=plt.cm.viridis(np.linspace(0.2, 0.8, len(actual_sizes))))
-                    plt.title('Histogram of Cluster Sizes', fontsize=16)
-                
-                plt.xlabel('Cluster Size', fontsize=14)
-                plt.ylabel('Frequency', fontsize=14)
-                plt.grid(linestyle='--', alpha=0.7)
-                
-                # Save figure
-                fig_path = self.figures_dir / "cluster_size_histogram.png"
-                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                plt.close()
-                
-                # Top 10 largest clusters visualization
-                plt.figure(figsize=(14, 8))
-                top_clusters = clusters_df.groupby('cluster_id').size().reset_index(name='entity_count')
-                top_clusters = top_clusters.sort_values('entity_count', ascending=False).head(10)
-                
-                plt.bar(top_clusters['cluster_id'].astype(str), top_clusters['entity_count'], 
-                       color=plt.cm.plasma(np.linspace(0.2, 0.8, len(top_clusters))))
-                plt.title('Top 10 Largest Clusters', fontsize=16)
-                plt.xlabel('Cluster ID', fontsize=14)
-                plt.ylabel('Entity Count', fontsize=14)
-                plt.xticks(rotation=45)
-                plt.grid(axis='y', linestyle='--', alpha=0.7)
-                
-                # Add value labels
-                for i, count in enumerate(top_clusters['entity_count']):
-                    plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
-                
-                # Save figure
-                fig_path = self.figures_dir / "top_10_largest_clusters.png"
-                plt.savefig(fig_path, dpi=300, bbox_inches='tight')
-                plt.close()
-                
-                logger.info(f"Cluster statistics visualizations saved to {self.figures_dir}")
-            
-            except Exception as e:
-                logger.error(f"Error generating cluster statistics visualization: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
+            self._create_cluster_visualizations(clusters_df, stats)
         
         logger.info(f"Cluster statistics report saved to {report_path}")
         logger.info(f"Cluster statistics summary saved to {summary_path}")
         
         return str(report_path)
+    
+    def _create_cluster_visualizations(self, clusters_df, stats):
+        """
+        Create visualizations for cluster statistics.
+        
+        Args:
+            clusters_df (DataFrame): Clusters dataframe
+            stats (dict): Cluster statistics
+        """
+        try:
+            # Cluster size distribution
+            plt.figure(figsize=(12, 8))
+            
+            # Prepare data for visualization
+            size_ranges = list(stats['cluster_size_distribution'].keys())
+            counts = list(stats['cluster_size_distribution'].values())
+            
+            # Bar plot with modern colors
+            plt.bar(size_ranges, counts, color=plt.cm.Blues(np.linspace(0.4, 0.8, len(size_ranges))))
+            plt.title('Cluster Size Distribution', fontsize=16)
+            plt.xlabel('Cluster Size', fontsize=14)
+            plt.ylabel('Count', fontsize=14)
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            
+            # Add value labels
+            for i, count in enumerate(counts):
+                plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
+            
+            # Save figure
+            fig_path = self.figures_dir / "cluster_size_distribution.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            # Top 10 largest clusters visualization
+            plt.figure(figsize=(14, 8))
+            top_clusters = clusters_df.groupby('cluster_id').size().reset_index(name='entity_count')
+            top_clusters = top_clusters.sort_values('entity_count', ascending=False).head(10)
+            
+            plt.bar(top_clusters['cluster_id'].astype(str), top_clusters['entity_count'], 
+                   color=plt.cm.Blues(np.linspace(0.4, 0.8, len(top_clusters))))
+            plt.title('Top 10 Largest Clusters', fontsize=16)
+            plt.xlabel('Cluster ID', fontsize=14)
+            plt.ylabel('Entity Count', fontsize=14)
+            plt.xticks(rotation=45)
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            
+            # Add value labels
+            for i, count in enumerate(top_clusters['entity_count']):
+                plt.text(i, count + 0.5, str(count), ha='center', fontsize=12)
+            
+            # Save figure
+            fig_path = self.figures_dir / "top_10_largest_clusters.png"
+            plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+            plt.close()
+            
+            logger.info(f"Cluster visualizations saved to {self.figures_dir}")
+        
+        except Exception as e:
+            logger.error(f"Error creating cluster visualizations: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
     
     def _generate_visualizations(self):
         """
@@ -1041,9 +1240,9 @@ class ReportGenerator:
             fpr, tpr, thresholds = roc_curve(test_df['true_label'], test_df['confidence'])
             roc_auc = auc(fpr, tpr)
             
-            # Plot ROC curve with enhanced styling
+            # Plot ROC curve with updated color scheme
             plt.figure(figsize=(12, 10))
-            plt.plot(fpr, tpr, color='#1976D2', lw=3, label=f'ROC curve (area = {roc_auc:.2f})')
+            plt.plot(fpr, tpr, color=self.colors['match_line'], lw=3, label=f'ROC curve (area = {roc_auc:.2f})')
             plt.plot([0, 1], [0, 1], color='#455A64', lw=2, linestyle='--')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
@@ -1055,9 +1254,10 @@ class ReportGenerator:
             
             # Add decision threshold point
             decision_idx = np.argmin(np.abs(thresholds - self.config['classification']['decision_threshold']))
-            plt.scatter(fpr[decision_idx], tpr[decision_idx], color='red', s=100, 
-                       label=f'Decision Threshold ({self.config["classification"]["decision_threshold"]:.2f})')
-            plt.legend(loc="lower right", fontsize=12)
+            if 0 <= decision_idx < len(fpr):
+                plt.scatter(fpr[decision_idx], tpr[decision_idx], color='red', s=100, 
+                           label=f'Decision Threshold ({self.config["classification"]["decision_threshold"]:.2f})')
+                plt.legend(loc="lower right", fontsize=12)
             
             # Add labels at key points
             plt.annotate('Perfect Classification', xy=(0, 1), xytext=(0.2, 0.9),
@@ -1097,18 +1297,21 @@ class ReportGenerator:
             precision, recall, thresholds = precision_recall_curve(test_df['true_label'], test_df['confidence'])
             
             # Calculate F1 scores for each threshold
-            f1_scores = 2 * (precision[:-1] * recall[:-1]) / (precision[:-1] + recall[:-1] + 1e-10)
+            f1_scores = np.zeros_like(thresholds)
+            for i in range(len(thresholds)):
+                f1_scores[i] = 2 * (precision[i] * recall[i]) / (precision[i] + recall[i] + 1e-10)
+            
             best_threshold_idx = np.argmax(f1_scores)
             best_threshold = thresholds[best_threshold_idx]
             best_f1 = f1_scores[best_threshold_idx]
             
-            # Calculate baseline performance
+            # Calculate baseline performance (random classifier)
             baseline = test_df['true_label'].mean()
             
-            # Plot precision-recall curve with enhanced styling
+            # Plot precision-recall curve with updated color scheme
             plt.figure(figsize=(12, 10))
-            plt.plot(recall, precision, color='#7B1FA2', lw=3, label='Precision-Recall curve')
-            plt.axhline(y=baseline, color='#FF5722', linestyle='--', 
+            plt.plot(recall, precision, color=self.colors['match_line'], lw=3, label='Precision-Recall curve')
+            plt.axhline(y=baseline, color=self.colors['non_match_line'], linestyle='--', 
                        label=f'Baseline precision: {baseline:.2f}')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
@@ -1175,8 +1378,8 @@ class ReportGenerator:
                 plt.close()
                 
                 logger.info(f"Threshold analysis visualization saved to {threshold_fig_path}")
-                figure_paths = [str(fig_path), str(threshold_fig_path)]
-                return figure_paths
+                
+                return [str(fig_path), str(threshold_fig_path)]
             
             return str(fig_path)
         
@@ -1222,7 +1425,7 @@ class ReportGenerator:
             metrics = ['accuracy', 'precision', 'recall', 'f1', 'roc_auc']
             values = [classification_metrics.get(m, 0) for m in metrics]
             
-            bars = ax1.bar(metrics, values, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(metrics))))
+            bars = ax1.bar(metrics, values, color=plt.cm.Blues(np.linspace(0.4, 0.8, len(metrics))))
             
             # Add value labels
             for bar in bars:
@@ -1271,7 +1474,7 @@ class ReportGenerator:
                         durations.append(results['duration'])
             
             if stages:
-                bars = ax3.barh(stages, durations, color=plt.cm.plasma(np.linspace(0.2, 0.8, len(stages))))
+                bars = ax3.barh(stages, durations, color=plt.cm.Blues(np.linspace(0.4, 0.8, len(stages))))
                 
                 # Add value labels
                 for bar in bars:
@@ -1291,7 +1494,7 @@ class ReportGenerator:
                 importance_values = [feature_importance[f]['importance'] for f in top_features]
                 
                 y_pos = np.arange(len(top_features))
-                bars = ax4.barh(y_pos, importance_values, color=plt.cm.viridis(np.linspace(0.2, 0.8, len(top_features))))
+                bars = ax4.barh(y_pos, importance_values, color=plt.cm.Blues(np.linspace(0.4, 0.8, len(top_features))))
                 
                 # Add value labels
                 for bar in bars:

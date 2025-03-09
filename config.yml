@@ -72,6 +72,8 @@ imputation:
   imputation_method: "average"  # average, weighted_average, nearest
 
 # Feature Engineering
+# Update to features section in config.yml
+
 features:
   # Direct similarity features
   cosine_similarities:
@@ -85,7 +87,7 @@ features:
   string_similarities:
     - 
       field: "person"
-      metrics: ["levenshtein", "jaro_winkler"]
+      metrics: ["levenshtein"] #["levenshtein", "jaro_winkler"]
   
   # Interaction features (harmonic means)
   harmonic_means:
@@ -104,23 +106,50 @@ features:
     - 
       type: "ratio"
       fields: ["composite", "subjects"]
+    # New interaction features
+    - 
+      type: "product"
+      fields: ["title", "subjects"]
+    - 
+      type: "ratio"
+      fields: ["title", "subjects"]
+  
+  # Birth/death year features
+  birth_death_features:
+    enabled: true
+    use_as_prefilter: false  # When false, birth_death_match is used as a regular feature
+                             # When true, matching birth/death years will trigger automatic classification
+
+  # Low composite penalty feature
+  low_composite_penalty:
+    enabled: true
+    threshold: 0.65  # Threshold below which the penalty is applied
+    
+  # Title cosine squared feature
+  title_cosine_squared:
+    enabled: true  # Can be set to false to disable this feature
+
+  person_levenshtein_birth_death_match_product:
+    enabled: true
+    dampening_factor: 0.25  # How much to reduce Levenshtein similarity when birth/death dates don't match
+                            # 0.25 means it's reduced to 25% of its original value
   
   # Feature normalization
   normalize_features: true
   
   # Recursive feature elimination
-  rfe_enabled: true
+  rfe_enabled: false  # Disabled based on our debugging
   rfe_step_size: 1
   rfe_cv_folds: 5
   
   # Prefilterers for automatic classification
   prefilters:
-    exact_name_birth_death_prefilter: true
+    exact_name_birth_death_prefilter: false  # DEPRECATED: Use birth_death_features.use_as_prefilter instead
     composite_cosine_prefilter:
-      enabled: true
+      enabled: false
       threshold: 0.65
     person_cosine_prefilter:
-      enabled: true
+      enabled: false
       threshold: 0.70
 
 # Classification Configuration
@@ -133,8 +162,8 @@ classification:
   convergence_tolerance: 0.0001
   batch_size: 1000
   class_weight: "balanced"  # Options: None, "balanced"
-  decision_threshold: 0.95
-  precision_recall_tradeoff: "balanced"  # precision, recall, balanced, f1
+  decision_threshold: 0.75
+  precision_recall_tradeoff: "precision"  # precision, recall, balanced, f1
 
 # Clustering Configuration
 clustering:

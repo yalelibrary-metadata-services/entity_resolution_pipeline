@@ -636,6 +636,16 @@ class Classifier:
             probabilities (ndarray): Prediction probabilities
             pair_ids (list, optional): Pair IDs for tracking. Defaults to None.
         """
+        print("\n=== DEBUG: SAVING TEST RESULTS ===")
+        print(f"Feature array shape: {features.shape}")
+        
+        # Sample a few feature vectors
+        for i in range(min(3, features.shape[0])):
+            # Print cosine features
+            cosine_indices = [j for j, name in enumerate(self.feature_names) if 'cosine' in name]
+            cosine_values = {self.feature_names[j]: features[i, j] for j in cosine_indices}
+            print(f"Sample {i} cosine features: {cosine_values}")
+
         # Create test results dataframe
         results_dict = {
             'true_label': labels,
@@ -643,6 +653,16 @@ class Classifier:
             'confidence': probabilities,
             'correct': labels == predictions
         }
+
+        for i, feature_name in enumerate(self.feature_names):
+            feature_values = features[:, i]
+            results_dict[feature_name] = feature_values
+            
+            # Check if cosine feature to debug
+            if 'cosine' in feature_name:
+                non_zero = np.count_nonzero(feature_values)
+                print(f"Feature {feature_name}: non-zero values={non_zero}/{len(feature_values)}")
+                print(f"First 5 values: {feature_values[:5]}")
         
         # Add pair IDs if available
         if pair_ids and len(pair_ids) == len(labels):

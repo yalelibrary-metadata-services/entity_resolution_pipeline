@@ -380,10 +380,12 @@ class FeatureEngineer:
         
         return batch_features
     
+    # Update to _compute_pair_features method in batch_parallel_feature_engineering.py
+
     def _compute_pair_features(self, left_id, right_id, match, pair_data):
         """
-        Compute features for a single pair, with proper normalization to ensure
-        all features represent similarity scores in the 0-1 range.
+        Compute features for a single pair, with proper representation of features
+        in raw, normalized, and standardized forms.
         
         Args:
             left_id (str): Left record ID
@@ -398,6 +400,8 @@ class FeatureEngineer:
         
         # Initialize feature vector and labels
         features = {}
+        features_raw = {}  # Store raw values
+        features_norm = {}  # Store domain-normalized values
         labels = {'match': match} if match is not None else {}
         
         # If pair data is not available, return empty features
@@ -411,142 +415,224 @@ class FeatureEngineer:
         # Calculate cosine similarity features
         for field in self.cosine_similarities:
             if field in left_vectors and field in right_vectors:
-                # Calculate cosine similarity
-                similarity = self._compute_cosine_similarity(
+                # Calculate cosine similarity (raw value in [-1,1] range)
+                raw_similarity = self._compute_cosine_similarity(
                     left_vectors[field],
                     right_vectors[field]
                 )
                 
-                # Add debugging to verify the raw similarity value
-                logger.debug(f"Raw {field}_cosine similarity: {similarity}"
-
+                # Store raw value
+                features_raw[f"{field}_cosine"] = raw_similarity
+                
                 # Normalize cosine similarity from [-1, 1] to [0, 1]
-                # This ensures all similarities have consistent scale
-                normalized_similarity = (similarity + 1) / 2
+                normalized_similarity = (raw_similarity + 1) / 2
+                features_norm[f"{field}_cosine"] = normalized_similarity
                 
-                # Add debugging to verify the normalized value
-                logger.debug(f"Normalized {field}_cosine similarity: {normalized_similarity}")
-                
+                # Initial value for features - will be replaced by StandardScaler if enabled
                 features[f"{field}_cosine"] = normalized_similarity
+                
+                # Add title_cosine_squared feature if it's the title field and the feature is enabled
+                if field == 'title' and self.config['features'].get('title_cosine_squared', {}).get('enabled', False):
+                    # Store all three versions
+                    features_raw[f"title_cosine_squared"] = raw_similarity ** 2  # Not really meaningful but for consistency
+                    features_norm[f"title_cosine_squared"] = normalized_similarity ** 2
+                    features[f"title_cosine_squared"] = normalized_similarity ** 2  # Will be scaled later
+                
+                # When processing the composite field, calculate the low_composite_penalty
+                if field == 'composite':
+                    # Get configuration 
+                    low_composite_config = self.config['features'].get('low_composite_penalty', {})
+                    enabled = low_composite_config.get('enabled', False)
+                    threshold = low_composite_config.get('threshold', 0.50)
+                    
+                    # Use the normalized value for the penalty calculation
+                    if enabled:
+                        # Calculate penalty using normalized value
+                        penalty_value = 1.0 if normalized_similarity < threshold else 0.0
+                        
+                        # Store in all representations for consistency
+                        features_raw[f"low_composite_penalty"] = penalty_value
+                        features_norm[f"low_composite_penalty"] = penalty_value
+                        features[f"low_composite_penalty"] = penalty_value
+                        
+                        # Log when applied
+                        if penalty_value == 1.0:
+                            logger.info(f"Low composite penalty applied for {pair_id}: normalized={normalized_similarity:.4f} < {threshold}")
         
         # Apply prefilters if configured
-        prefilter_result = self._apply_prefilters(left_vectors, right_vectors, features)
+        prefilter_result = self._apply_prefilters(left_vectors, right_vectors, features_norm)  # Use normalized features for prefilters
         if prefilter_result:
             labels['prefiltered'] = True
             labels['prefilter_match'] = prefilter_result == 'match'
-        
-        # Calculate string similarity features
-        for field_config in self.string_similarities:
-            field = field_config['field']
-            metrics = field_config['metrics']
             
-            # Get left and right field hashes
-            left_hash = None
-            right_hash = None
-            
-            if 'hashes' in pair_data:
-                left_hash = pair_data['hashes'].get('left', {}).get(field)
-                right_hash = pair_data['hashes'].get('right', {}).get(field)
-            
-            # If hashes are available, get the string values
-            left_string = None
-            right_string = None
-            
-            if left_hash and left_hash in self.unique_strings:
-                left_string = self.unique_strings[left_hash]
-            
-            if right_hash and right_hash in self.unique_strings:
-                right_string = self.unique_strings[right_hash]
-            
-            # If we have both strings, calculate string similarity
-            if left_string and right_string:
-                for metric in metrics:
-                    if metric == 'levenshtein':
-                        # Calculate Levenshtein distance
-                        distance = Levenshtein.distance(left_string, right_string)
-                        max_len = max(len(left_string), len(right_string))
-                        
-                        # Convert to similarity score (0-1 range)
-                        similarity = 1.0 - (distance / max_len) if max_len > 0 else 1.0
-                        
-                        # Levenshtein similarity is already normalized (0-1)
-                        features[f"{field}_levenshtein"] = similarity
-                    
-                    elif metric == 'jaro_winkler':
-                        # Jaro-Winkler similarity is already normalized (0-1)
-                        similarity = jellyfish.jaro_winkler_similarity(left_string, right_string)
-                        features[f"{field}_jaro_winkler"] = similarity
-        
-        # Calculate harmonic mean features
-        for field1, field2 in self.harmonic_means:
-            # Get normalized cosine similarities for both fields
-            sim1 = features.get(f"{field1}_cosine")
-            sim2 = features.get(f"{field2}_cosine")
-            
-            if sim1 is not None and sim2 is not None:
-                # Calculate harmonic mean
-                # Since we've normalized the input similarities to 0-1 range,
-                # the harmonic mean will also be in 0-1 range
-                harmonic_mean = compute_harmonic_mean(sim1, sim2)
-                features[f"{field1}_{field2}_harmonic"] = harmonic_mean
-        
-        # Calculate additional interaction features
-        for interaction in self.additional_interactions:
-            interaction_type = interaction['type']
-            fields = interaction['fields']
-            
-            if len(fields) == 2:
-                field1, field2 = fields
+            # Calculate string similarity features
+            for field_config in self.string_similarities:
+                field = field_config['field']
+                metrics = field_config['metrics']
                 
+                # Get left and right field hashes
+                left_hash = None
+                right_hash = None
+                
+                if 'hashes' in pair_data:
+                    left_hash = pair_data['hashes'].get('left', {}).get(field)
+                    right_hash = pair_data['hashes'].get('right', {}).get(field)
+                
+                # If hashes are available, get the string values
+                left_string = None
+                right_string = None
+                
+                if left_hash and left_hash in self.unique_strings:
+                    left_string = self.unique_strings[left_hash]
+                
+                if right_hash and right_hash in self.unique_strings:
+                    right_string = self.unique_strings[right_hash]
+                
+                # If we have both strings, calculate string similarity
+                if left_string and right_string:
+                    for metric in metrics:
+                        if metric == 'levenshtein':
+                            # Calculate Levenshtein distance
+                            distance = Levenshtein.distance(left_string, right_string)
+                            max_len = max(len(left_string), len(right_string))
+                            
+                            # Convert to similarity score (0-1 range)
+                            similarity = 1.0 - (distance / max_len) if max_len > 0 else 1.0
+                            
+                            # Levenshtein similarity is already normalized (0-1)
+                            features[f"{field}_levenshtein"] = similarity
+                        
+                        elif metric == 'jaro_winkler':
+                            # Jaro-Winkler similarity is already normalized (0-1)
+                            similarity = jellyfish.jaro_winkler_similarity(left_string, right_string)
+                            features[f"{field}_jaro_winkler"] = similarity
+            
+            # Calculate harmonic mean features
+            for field1, field2 in self.harmonic_means:
                 # Get normalized cosine similarities for both fields
                 sim1 = features.get(f"{field1}_cosine")
                 sim2 = features.get(f"{field2}_cosine")
                 
                 if sim1 is not None and sim2 is not None:
-                    if interaction_type == 'product':
-                        # Calculate product
-                        # Product of two 0-1 values will remain in 0-1 range
-                        product = sim1 * sim2
-                        features[f"{field1}_{field2}_product"] = product
+                    # Calculate harmonic mean
+                    # Since we've normalized the input similarities to 0-1 range,
+                    # the harmonic mean will also be in 0-1 range
+                    harmonic_mean = compute_harmonic_mean(sim1, sim2)
+                    features[f"{field1}_{field2}_harmonic"] = harmonic_mean
+            
+            # Calculate additional interaction features
+            for interaction in self.additional_interactions:
+                interaction_type = interaction['type']
+                fields = interaction['fields']
+                
+                if len(fields) == 2:
+                    field1, field2 = fields
                     
-                    elif interaction_type == 'ratio':
-                        # Calculate ratio
-                        if sim2 > 0:
-                            ratio = sim1 / sim2
-                            
-                            # Normalize the ratio to 0-1 range
-                            # Use a sigmoid-like function to map arbitrary ratios to 0-1
-                            # This ensures very large ratios don't dominate
-                            normalized_ratio = 2 / (1 + np.exp(-ratio)) - 1
-                            features[f"{field1}_{field2}_ratio"] = normalized_ratio
-                        else:
-                            # Avoid division by zero
-                            features[f"{field1}_{field2}_ratio"] = 0.0
-        
-        # Final feature validation to ensure all features are in 0-1 range
-        for feature_name, value in list(features.items()):
-            # Handle any features that might have slipped through normalization
-            if value < 0 or value > 1:
-                logger.warning(f"Feature {feature_name} with value {value} outside 0-1 range, normalizing")
-                if value < 0:
-                    features[feature_name] = 0.0
-                elif value > 1:
-                    features[feature_name] = 1.0
-        
-        return pair_id, features, labels
+                    # Get normalized cosine similarities for both fields
+                    sim1 = features.get(f"{field1}_cosine")
+                    sim2 = features.get(f"{field2}_cosine")
+                    
+                    if sim1 is not None and sim2 is not None:
+                        if interaction_type == 'product':
+                            # Calculate product
+                            # Product of two 0-1 values will remain in 0-1 range
+                            product = sim1 * sim2
+                            features[f"{field1}_{field2}_product"] = product
+                        
+                        elif interaction_type == 'ratio':
+                            # Calculate ratio
+                            if sim2 > 0:
+                                ratio = sim1 / sim2
+                                
+                                # Normalize the ratio to 0-1 range
+                                # Use a sigmoid-like function to map arbitrary ratios to 0-1
+                                # This ensures very large ratios don't dominate
+                                normalized_ratio = 2 / (1 + np.exp(-ratio)) - 1
+                                features[f"{field1}_{field2}_ratio"] = normalized_ratio
+                            else:
+                                # Avoid division by zero
+                                features[f"{field1}_{field2}_ratio"] = 0.0
+                    
+
+            # Always compute birth/death year features (configuration only determines how they're used)
+            birth_death_config = self.config['features'].get('birth_death_features', {})
+            if birth_death_config.get('enabled', False):
+                # Get person strings for both records
+                left_person = None
+                right_person = None
+                
+                if 'hashes' in pair_data:
+                    left_hash = pair_data['hashes'].get('left', {}).get('person')
+                    right_hash = pair_data['hashes'].get('right', {}).get('person')
+                    
+                    if left_hash and left_hash in self.unique_strings:
+                        left_person = self.unique_strings[left_hash]
+                    
+                    if right_hash and right_hash in self.unique_strings:
+                        right_person = self.unique_strings[right_hash]
+                
+                # Extract birth/death years
+                left_birth, left_death = None, None
+                right_birth, right_death = None, None
+                
+                if left_person:
+                    left_birth, left_death = extract_birth_death_years(left_person)
+                
+                if right_person:
+                    right_birth, right_death = extract_birth_death_years(right_person)
+                
+                # Feature 1: birth_death_left - binary indicator if left record has birth/death info
+                features['birth_death_left'] = 1.0 if (left_birth or left_death) else 0.0
+                
+                # Feature 2: birth_death_right - binary indicator if right record has birth/death info
+                features['birth_death_right'] = 1.0 if (right_birth or right_death) else 0.0
+                
+                # Feature 3: birth_death_match - binary indicator if birth/death years match
+                birth_match = (left_birth and right_birth and left_birth == right_birth)
+                death_match = (left_death and right_death and left_death == right_death)
+                features['birth_death_match'] = 1.0 if (birth_match or death_match) else 0.0                
+
+                # Calculate the person_levenshtein_birth_death_match_product feature
+                birth_death_config = self.config['features'].get('birth_death_features', {})
+                if (birth_death_config.get('enabled', False) and 
+                    'person_levenshtein' in features and 
+                    'birth_death_match' in features and
+                    self.config['features'].get('person_levenshtein_birth_death_match_product', {}).get('enabled', False)):
+                    
+                    # Get the base Levenshtein similarity (already in [0,1] range)
+                    levenshtein_sim = features['person_levenshtein']
+                    
+                    # Get birth/death match status (1.0 if dates match, 0.0 if not)
+                    birth_death_match = features['birth_death_match']
+                    
+                    # Get dampening factor for non-matching dates (configurable)
+                    dampening_factor = self.config['features']['person_levenshtein_birth_death_match_product'].get('dampening_factor', 0.25)
+                    
+                    # Calculate the composite feature
+                    if birth_death_match == 1.0:
+                        # If birth/death dates match, keep full Levenshtein similarity
+                        product_value = levenshtein_sim
+                    else:
+                        # If birth/death dates don't match, dampen the Levenshtein similarity
+                        product_value = levenshtein_sim * dampening_factor
+                        
+                    # Store in all representations
+                    features_raw['person_levenshtein_birth_death_match_product'] = product_value
+                    features_norm['person_levenshtein_birth_death_match_product'] = product_value
+                    features['person_levenshtein_birth_death_match_product'] = product_value
+                
+                # Store the raw and normalized features in the return data
+                return pair_id, features, labels, features_raw, features_norm
     
     def _compute_cosine_similarity(self, vec1, vec2):
-        """
-        Compute cosine similarity between two vectors.
+        """Compute cosine similarity between two vectors."""
+        # Log vector info
+        vec1_info = f"type={type(vec1)}, length={len(vec1) if hasattr(vec1, '__len__') else 'N/A'}"
+        vec2_info = f"type={type(vec2)}, length={len(vec2) if hasattr(vec2, '__len__') else 'N/A'}"
+        print(f"Computing cosine similarity: vec1={vec1_info}, vec2={vec2_info}")
         
-        Args:
-            vec1 (list): First vector
-            vec2 (list): Second vector
-            
-        Returns:
-            float: Cosine similarity
-        """
         if not vec1 or not vec2:
+            print("Empty vector detected - returning 0")
             return 0.0
         
         # Convert to numpy arrays
@@ -560,11 +646,17 @@ class FeatureEngineer:
         mag1 = np.linalg.norm(vec1)
         mag2 = np.linalg.norm(vec2)
         
+        print(f"Dot product: {dot_product}, Magnitudes: mag1={mag1}, mag2={mag2}")
+        
         # Compute cosine similarity
         if mag1 == 0.0 or mag2 == 0.0:
+            print("Zero magnitude detected - returning 0")
             return 0.0
         
-        return dot_product / (mag1 * mag2)
+        similarity = dot_product / (mag1 * mag2)
+        print(f"Calculated similarity: {similarity}")
+        
+        return similarity
     
     def _apply_prefilters(self, left_vectors, right_vectors, features):
         """
@@ -578,44 +670,59 @@ class FeatureEngineer:
         Returns:
             str: 'match', 'non_match', or None if no prefilter applies
         """
-        # Apply exact name birth death prefilter
-        if self.exact_name_birth_death_prefilter:
-            if 'person' in left_vectors and 'person' in right_vectors:
-                # Get person field hashes
-                left_hash = None
-                right_hash = None
-                
-                if 'hashes' in left_vectors:
-                    left_hash = left_vectors['hashes'].get('person')
-                
-                if 'hashes' in right_vectors:
-                    right_hash = right_vectors['hashes'].get('person')
-                
-                # If we have the hashes, get the string values
-                left_person = None
-                right_person = None
-                
-                if left_hash and left_hash in self.unique_strings:
-                    left_person = self.unique_strings[left_hash]
-                
-                if right_hash and right_hash in self.unique_strings:
-                    right_person = self.unique_strings[right_hash]
-                
-                # If we have both person strings, extract birth/death years
-                if left_person and right_person:
-                    # Extract birth/death years
-                    left_birth, left_death = extract_birth_death_years(left_person)
-                    right_birth, right_death = extract_birth_death_years(right_person)
+        # Check if birth/death features are enabled and configured as prefilter
+        birth_death_config = self.config['features'].get('birth_death_features', {})
+        if birth_death_config.get('enabled', False) and birth_death_config.get('use_as_prefilter', False):
+            # If we already computed the birth_death_match feature, use it
+            if 'birth_death_match' in features and features['birth_death_match'] == 1.0:
+                # We need to also check that names are sufficiently similar
+                if 'person_cosine' in features and features['person_cosine'] > 0.5:
+                    logger.info(f"Birth/death match prefilter applied - classified as match")
+                    return 'match'
+        
+        # Legacy prefilter support - apply direct birth/death year extraction
+        if self.config['features']['prefilters'].get('exact_name_birth_death_prefilter', False):
+            try:
+                if 'person' in left_vectors and 'person' in right_vectors:
+                    # Get person field hashes
+                    left_hash = None
+                    right_hash = None
                     
-                    # Normalize names
-                    left_normalized = normalize_name(left_person)
-                    right_normalized = normalize_name(right_person)
+                    if 'hashes' in pair_data:
+                        left_hash = pair_data['hashes'].get('left', {}).get('person')
+                        right_hash = pair_data['hashes'].get('right', {}).get('person')
                     
-                    # Check if normalized names match and have birth/death years
-                    if (left_normalized == right_normalized and
-                        ((left_birth and right_birth and left_birth == right_birth) or
-                        (left_death and right_death and left_death == right_death))):
-                        return 'match'
+                    # If we have the hashes, get the string values
+                    left_person = None
+                    right_person = None
+                    
+                    if left_hash and left_hash in self.unique_strings:
+                        left_person = self.unique_strings[left_hash]
+                    
+                    if right_hash and right_hash in self.unique_strings:
+                        right_person = self.unique_strings[right_hash]
+                    
+                    # If we have both person strings, extract birth/death years
+                    if left_person and right_person:
+                        # Extract birth/death years
+                        left_birth, left_death = extract_birth_death_years(left_person)
+                        right_birth, right_death = extract_birth_death_years(right_person)
+                        
+                        # Normalize names (remove dates)
+                        left_normalized = normalize_name(left_person)
+                        right_normalized = normalize_name(right_person)
+                        
+                        # Check if normalized names match and have matching birth/death years
+                        if (left_normalized == right_normalized and
+                            ((left_birth and right_birth and left_birth == right_birth) or
+                            (left_death and right_death and left_death == right_death))):
+                            logger.info(f"Exact name birth/death prefilter applied - found match: '{left_person}' and '{right_person}'")
+                            return 'match'
+            except Exception as e:
+                # Add detailed error logging to catch any issues with the birth/death extraction
+                logger.error(f"Error in exact name birth/death prefilter: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
         
         # Apply composite cosine prefilter
         if (self.composite_cosine_prefilter['enabled'] and
@@ -636,18 +743,16 @@ class FeatureEngineer:
         # No prefilter applies
         return None
     
-    # The rest of the class remains the same...
-    # (This includes methods like _normalize_features, _perform_recursive_feature_elimination, etc.)
-    
     def _normalize_features(self, feature_set):
         """
-        Normalize feature vectors using StandardScaler.
+        Normalize feature vectors using StandardScaler while preserving
+        the original raw and normalized values.
         
         Args:
             feature_set (dict): Dictionary of pair ID -> feature vector
             
         Returns:
-            dict: Normalized feature set
+            dict: Normalized feature set with multiple representations
         """
         # Extract feature vectors
         pair_ids = []
@@ -669,23 +774,49 @@ class FeatureEngineer:
         # Convert to numpy array
         X = np.array(feature_vectors)
         
-        # Fit scaler if not already fit
-        if not self.scaler:
-            self.scaler = StandardScaler()
-            self.scaler.fit(X)
-        
-        # Transform feature vectors
-        X_scaled = self.scaler.transform(X)
-        
-        # Update feature set
+        # Before normalization, store raw and normalized features
         for i, pair_id in enumerate(pair_ids):
-            # Convert scaled vector back to dictionary
-            scaled_features = {}
-            for j, name in enumerate(self.feature_names):
-                scaled_features[name] = X_scaled[i, j]
+            # Store normalized features (from the domain-specific normalization)
+            if 'features_norm' not in feature_set[pair_id]:
+                feature_set[pair_id]['features_norm'] = {}
+                
+            # Store raw features 
+            if 'features_raw' not in feature_set[pair_id]:
+                feature_set[pair_id]['features_raw'] = {}
+        
+        # Only apply StandardScaler if normalize_features is enabled
+        if self.normalize_features:
+            logger.info("Applying StandardScaler normalization to features")
             
-            # Update feature set
-            feature_set[pair_id]['features'] = scaled_features
+            # Fit scaler if not already fit
+            if not self.scaler:
+                self.scaler = StandardScaler()
+                self.scaler.fit(X)
+                logger.info(f"Fitted StandardScaler with means: {self.scaler.mean_}")
+                logger.info(f"Fitted StandardScaler with stds: {self.scaler.scale_}")
+            
+            # Transform feature vectors
+            X_scaled = self.scaler.transform(X)
+            
+            # Update feature set with scaled values
+            for i, pair_id in enumerate(pair_ids):
+                # Create new features dictionary for StandardScaler values
+                scaled_features = {}
+                for j, name in enumerate(self.feature_names):
+                    scaled_features[name] = X_scaled[i, j]
+                
+                # Update feature set - 'features' will be used for model training
+                feature_set[pair_id]['features'] = scaled_features
+                # Also store as 'features_std' for clarity
+                feature_set[pair_id]['features_std'] = scaled_features.copy()
+            
+            logger.info("StandardScaler applied to features")
+        else:
+            logger.info("StandardScaler normalization disabled - using domain-normalized features")
+            # If StandardScaler is disabled, use the normalized features
+            for i, pair_id in enumerate(pair_ids):
+                # Create a copy of the normalized features for the std version
+                feature_set[pair_id]['features_std'] = feature_set[pair_id]['features'].copy()
         
         return feature_set
     
