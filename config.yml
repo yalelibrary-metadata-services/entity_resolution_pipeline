@@ -87,7 +87,7 @@ features:
   string_similarities:
     - 
       field: "person"
-      metrics: ["levenshtein"] #["levenshtein", "jaro_winkler"]
+      metrics: [""] #["levenshtein", "jaro_winkler"]
   
   # Interaction features (harmonic means)
   harmonic_means:
@@ -133,7 +133,12 @@ features:
     enabled: true
     dampening_factor: 0.25  # How much to reduce Levenshtein similarity when birth/death dates don't match
                             # 0.25 means it's reduced to 25% of its original value
-  
+
+  person_cosine_birth_death_match_product:
+    enabled: true
+    dampening_factor: 0.25  # How much to reduce cosine similarity when birth/death dates don't match
+                            # 0.25 means it's reduced to 25% of its original value
+
   # Feature normalization
   normalize_features: true
   
@@ -162,7 +167,7 @@ classification:
   convergence_tolerance: 0.0001
   batch_size: 1000
   class_weight: "balanced"  # Options: None, "balanced"
-  decision_threshold: 0.5
+  decision_threshold: 0.96
   precision_recall_tradeoff: "balanced"  # precision, recall, balanced, f1
 
 # Clustering Configuration

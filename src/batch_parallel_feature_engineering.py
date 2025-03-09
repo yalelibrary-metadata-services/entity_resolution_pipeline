@@ -636,6 +636,33 @@ class FeatureEngineer:
                 features_raw['person_levenshtein_birth_death_match_product'] = product_value
                 features_norm['person_levenshtein_birth_death_match_product'] = product_value
                 features['person_levenshtein_birth_death_match_product'] = product_value
+
+            # Calculate the person_cosine_birth_death_match_product feature
+            if ('person_cosine' in features_norm and 
+                'birth_death_match' in features and
+                self.config['features'].get('person_cosine_birth_death_match_product', {}).get('enabled', False)):
+                
+                # Get the cosine similarity (already in [0,1] range from normalization)
+                cosine_sim = features_norm['person_cosine']
+                
+                # Get birth/death match status (1.0 if dates match, 0.0 if not)
+                birth_death_match = features['birth_death_match']
+                
+                # Get dampening factor for non-matching dates (configurable)
+                dampening_factor = self.config['features']['person_cosine_birth_death_match_product'].get('dampening_factor', 0.25)
+                
+                # Calculate the composite feature
+                if birth_death_match == 1.0:
+                    # If birth/death dates match, keep full cosine similarity
+                    product_value = cosine_sim
+                else:
+                    # If birth/death dates don't match, dampen the cosine similarity
+                    product_value = cosine_sim * dampening_factor
+                    
+                # Store in all representations
+                features_raw['person_cosine_birth_death_match_product'] = product_value
+                features_norm['person_cosine_birth_death_match_product'] = product_value
+                features['person_cosine_birth_death_match_product'] = product_value
         
         # Always return all data regardless of prefilter status
         return pair_id, features, labels, features_raw, features_norm

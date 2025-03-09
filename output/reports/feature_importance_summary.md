@@ -1,6 +1,6 @@
 # Entity Resolution Feature Importance
 
-Generated: 2025-03-08 22:20:50
+Generated: 2025-03-09 08:38:48
 
 ## Understanding Feature Values
 
@@ -12,42 +12,55 @@ give appropriate weight to each feature regardless of its original scale.
 
 | Feature | Weight | Absolute Weight | Importance |
 |---------|--------|----------------|------------|
-| person_levenshtein | 2.7353 | 2.7353 | 0.3947 |
-| composite_cosine | 1.8542 | 1.8542 | 0.2675 |
-| low_composite_penalty | -1.0173 | 1.0173 | 0.1468 |
-| title_cosine | 0.2816 | 0.2816 | 0.0406 |
-| title_cosine_squared | 0.2493 | 0.2493 | 0.0360 |
-| title_subjects_ratio | -0.2378 | 0.2378 | 0.0343 |
-| composite_subjects_ratio | 0.1583 | 0.1583 | 0.0228 |
-| provision_subjects_harmonic | -0.1174 | 0.1174 | 0.0169 |
-| provision_cosine | 0.1065 | 0.1065 | 0.0154 |
-| title_provision_harmonic | -0.0642 | 0.0642 | 0.0093 |
-| title_subjects_product | 0.0468 | 0.0468 | 0.0068 |
-| title_subjects_harmonic | -0.0444 | 0.0444 | 0.0064 |
-| subjects_cosine | 0.0174 | 0.0174 | 0.0025 |
+| person_cosine | 1.2747 | 1.2747 | 0.1437 |
+| person_levenshtein | 0.9708 | 0.9708 | 0.1095 |
+| person_title_harmonic | 0.8580 | 0.8580 | 0.0967 |
+| composite_cosine | 0.8073 | 0.8073 | 0.0910 |
+| low_composite_penalty | -0.6601 | 0.6601 | 0.0744 |
+| person_levenshtein_birth_death_match_product | 0.5195 | 0.5195 | 0.0586 |
+| person_cosine_birth_death_match_product | 0.5076 | 0.5076 | 0.0572 |
+| person_provision_harmonic | 0.4718 | 0.4718 | 0.0532 |
+| birth_death_match | 0.3987 | 0.3987 | 0.0450 |
+| person_subjects_product | 0.3773 | 0.3773 | 0.0425 |
+| birth_death_right | -0.3611 | 0.3611 | 0.0407 |
+| birth_death_left | -0.3401 | 0.3401 | 0.0383 |
+| title_subjects_ratio | -0.2160 | 0.2160 | 0.0244 |
+| title_cosine | 0.1777 | 0.1777 | 0.0200 |
+| provision_subjects_harmonic | -0.1772 | 0.1772 | 0.0200 |
+| title_cosine_squared | 0.1522 | 0.1522 | 0.0172 |
+| person_subjects_harmonic | 0.1350 | 0.1350 | 0.0152 |
+| title_provision_harmonic | -0.1228 | 0.1228 | 0.0138 |
+| title_subjects_harmonic | -0.1015 | 0.1015 | 0.0114 |
+| provision_cosine | -0.0753 | 0.0753 | 0.0085 |
+| subjects_cosine | -0.0719 | 0.0719 | 0.0081 |
+| composite_subjects_ratio | -0.0593 | 0.0593 | 0.0067 |
+| title_subjects_product | -0.0332 | 0.0332 | 0.0037 |
 
 ## Feature Type Importance
 
 | Feature Type | Importance |
 |--------------|------------|
-| levenshtein | 0.3947 |
-| cosine | 0.3261 |
-| penalty | 0.1468 |
-| ratio | 0.0572 |
-| squared | 0.0360 |
-| harmonic | 0.0326 |
-| product | 0.0068 |
+| cosine | 0.2714 |
+| harmonic | 0.2104 |
+| product | 0.1621 |
+| levenshtein | 0.1095 |
+| penalty | 0.0744 |
+| match | 0.0450 |
+| right | 0.0407 |
+| left | 0.0383 |
+| ratio | 0.0310 |
+| squared | 0.0172 |
 
 ## Insights
 
 ### Top Features
-1. **person_levenshtein** (Importance: 0.3947)
-2. **composite_cosine** (Importance: 0.2675)
-3. **low_composite_penalty** (Importance: 0.1468)
-4. **title_cosine** (Importance: 0.0406)
-5. **title_cosine_squared** (Importance: 0.0360)
+1. **person_cosine** (Importance: 0.1437)
+2. **person_levenshtein** (Importance: 0.1095)
+3. **person_title_harmonic** (Importance: 0.0967)
+4. **composite_cosine** (Importance: 0.0910)
+5. **low_composite_penalty** (Importance: 0.0744)
 
 ### Top Feature Types
-1. **levenshtein** (Importance: 0.3947)
-2. **cosine** (Importance: 0.3261)
-3. **penalty** (Importance: 0.1468)
+1. **cosine** (Importance: 0.2714)
+2. **harmonic** (Importance: 0.2104)
+3. **product** (Importance: 0.1621)

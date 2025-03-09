@@ -2,7 +2,7 @@
   "feature_set_path": "tmp/ground_truth_features.pkl",
   "scaler_path": "tmp/feature_scaler.pkl",
   "rfe_path": null,
-  "feature_count": 22,
+  "feature_count": 23,
   "pair_count": 77559,
   "processed_pairs": 77560,
   "feature_names": [
@@ -27,6 +27,7 @@
     "birth_death_left",
     "birth_death_right",
     "birth_death_match",
-    "person_levenshtein_birth_death_match_product"
+    "person_levenshtein_birth_death_match_product",
+    "person_cosine_birth_death_match_product"
   ]
 }

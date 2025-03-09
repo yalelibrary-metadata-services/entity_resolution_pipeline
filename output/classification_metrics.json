@@ -1,125 +1,130 @@
 {
-  "accuracy": 0.9986247206463813,
-  "precision": 0.9972745081338897,
-  "recall": 1.0,
-  "f1": 0.99863539445629,
-  "roc_auc": 0.99931398678235,
+  "accuracy": 0.9983668557675778,
+  "precision": 0.997018993271442,
+  "recall": 0.9997437868306431,
+  "f1": 0.9983795309168444,
+  "roc_auc": 0.9998596025422003,
   "confusion_matrix": {
-    "true_negatives": 11527,
-    "false_positives": 32,
-    "false_negatives": 0,
-    "true_positives": 11709
+    "true_negatives": 11524,
+    "false_positives": 35,
+    "false_negatives": 3,
+    "true_positives": 11706
   },
   "feature_importance": {
     "person_cosine": {
-      "weight": 4.248400654955564,
-      "abs_weight": 4.248400654955564,
-      "importance": 1.0
-    },
-    "title_cosine": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "title_cosine_squared": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "provision_cosine": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "subjects_cosine": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "composite_cosine": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "low_composite_penalty": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+      "weight": 1.2746943247989624,
+      "abs_weight": 1.2746943247989624,
+      "importance": 0.14372588110484827
     },
     "person_levenshtein": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+      "weight": 0.9708344864015144,
+      "abs_weight": 0.9708344864015144,
+      "importance": 0.10946470793069313
     },
     "person_title_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+      "weight": 0.8579700290128447,
+      "abs_weight": 0.8579700290128447,
+      "importance": 0.09673887769200784
     },
-    "person_provision_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+    "composite_cosine": {
+      "weight": 0.8073270776133016,
+      "abs_weight": 0.8073270776133016,
+      "importance": 0.09102872219037626
     },
-    "person_subjects_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "title_subjects_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "title_provision_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "provision_subjects_harmonic": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "person_subjects_product": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "composite_subjects_ratio": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "title_subjects_product": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "title_subjects_ratio": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "birth_death_left": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "birth_death_right": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
-    },
-    "birth_death_match": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+    "low_composite_penalty": {
+      "weight": -0.6601381083248933,
+      "abs_weight": 0.6601381083248933,
+      "importance": 0.07443269293981271
     },
     "person_levenshtein_birth_death_match_product": {
-      "weight": 0.0,
-      "abs_weight": 0.0,
-      "importance": 0.0
+      "weight": 0.5194578293326009,
+      "abs_weight": 0.5194578293326009,
+      "importance": 0.05857053943455412
+    },
+    "person_cosine_birth_death_match_product": {
+      "weight": 0.5076163722674512,
+      "abs_weight": 0.5076163722674512,
+      "importance": 0.057235377100225616
+    },
+    "person_provision_harmonic": {
+      "weight": 0.4717760160320663,
+      "abs_weight": 0.4717760160320663,
+      "importance": 0.053194261768630534
+    },
+    "birth_death_match": {
+      "weight": 0.3987010176256521,
+      "abs_weight": 0.3987010176256521,
+      "importance": 0.04495482088592816
+    },
+    "person_subjects_product": {
+      "weight": 0.3772624325825141,
+      "abs_weight": 0.3772624325825141,
+      "importance": 0.04253755153356622
+    },
+    "birth_death_right": {
+      "weight": -0.36108516084098213,
+      "abs_weight": 0.36108516084098213,
+      "importance": 0.04071351216217344
+    },
+    "birth_death_left": {
+      "weight": -0.3400962885738543,
+      "abs_weight": 0.3400962885738543,
+      "importance": 0.038346949370371704
+    },
+    "title_subjects_ratio": {
+      "weight": -0.2159990333742864,
+      "abs_weight": 0.2159990333742864,
+      "importance": 0.024354585084083613
+    },
+    "title_cosine": {
+      "weight": 0.1777481659568257,
+      "abs_weight": 0.1777481659568257,
+      "importance": 0.020041676870997838
+    },
+    "provision_subjects_harmonic": {
+      "weight": -0.1771584016035444,
+      "abs_weight": 0.1771584016035444,
+      "importance": 0.019975179045071647
+    },
+    "title_cosine_squared": {
+      "weight": 0.15216299188722684,
+      "abs_weight": 0.15216299188722684,
+      "importance": 0.017156866281640294
+    },
+    "person_subjects_harmonic": {
+      "weight": 0.13495916866043042,
+      "abs_weight": 0.13495916866043042,
+      "importance": 0.015217079931659218
+    },
+    "title_provision_harmonic": {
+      "weight": -0.12275853758969474,
+      "abs_weight": 0.12275853758969474,
+      "importance": 0.013841419574064677
+    },
+    "title_subjects_harmonic": {
+      "weight": -0.10152078189472917,
+      "abs_weight": 0.10152078189472917,
+      "importance": 0.011446794376035458
+    },
+    "provision_cosine": {
+      "weight": -0.0753188170665582,
+      "abs_weight": 0.0753188170665582,
+      "importance": 0.008492438646711054
+    },
+    "subjects_cosine": {
+      "weight": -0.0718831326325261,
+      "abs_weight": 0.0718831326325261,
+      "importance": 0.008105054186866257
+    },
+    "composite_subjects_ratio": {
+      "weight": -0.059300402242697746,
+      "abs_weight": 0.059300402242697746,
+      "importance": 0.006686310903241728
+    },
+    "title_subjects_product": {
+      "weight": -0.03315826553228159,
+      "abs_weight": 0.03315826553228159,
+      "importance": 0.0037387009864402686
     }
   },
   "training_duration": null
