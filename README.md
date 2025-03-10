@@ -1,7 +1,7 @@
 # Entity Resolution for Library Catalog Data
 
 *This codebase was developed using Anthropic's Claude 3.7 Sonnet model.*
-The project instructions and initial prompt used to define the project specifications are in the `prompts` folder.
+The project instructions and initial prompt used to define the project specifications are in the [prompts](prompts) folder.
 
 ## Overview
 
