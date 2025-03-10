@@ -18,7 +18,7 @@ Library catalogs contain millions of records with references to people who autho
 - Different name forms: "Schubert, Franz" vs. "Schubert, F." vs. "Franz Schubert"
 - Incomplete information: missing birth/death years or other identifiers
 - Different languages and transliterations 
-- Identical names for different people (e.g., "Samuel Butler" may refer to hundreds of distinct individuals)
+- Identical names for different people (e.g., "Samuel Butler" may refer to multiple distinct individuals)
 
 Unlike traditional entity resolution problems, library catalog metadata primarily describes works rather than people, making identity resolution particularly challenging. Catalogers follow standards for name formatting ("authority control"), but practices vary across time, institutions, and languages.
 
