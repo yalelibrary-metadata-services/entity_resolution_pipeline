@@ -1,75 +1,50 @@
 {
-  "accuracy": 0.9446450060168472,
-  "precision": 0.9999040583325338,
-  "recall": 0.8900845503458877,
-  "f1": 0.9418037231158504,
-  "roc_auc": 0.9998909300456773,
+  "accuracy": 0.9247464328691766,
+  "precision": 0.9997992371009837,
+  "recall": 0.8506277222649244,
+  "f1": 0.9192007752295694,
+  "roc_auc": 0.9996996549489761,
   "confusion_matrix": {
-    "true_negatives": 11558,
-    "false_positives": 1,
-    "false_negatives": 1287,
-    "true_positives": 10422
+    "true_negatives": 11557,
+    "false_positives": 2,
+    "false_negatives": 1749,
+    "true_positives": 9960
   },
   "feature_importance": {
-    "person_cosine": {
-      "weight": 1.5565610078166228,
-      "abs_weight": 1.5565610078166228,
-      "importance": 0.20845075912876684
-    },
     "person_title_harmonic": {
-      "weight": 1.077066355896316,
-      "abs_weight": 1.077066355896316,
-      "importance": 0.1442380339679507
+      "weight": 1.9920699486990558,
+      "abs_weight": 1.9920699486990558,
+      "importance": 0.2761878974976133
     },
     "composite_cosine": {
-      "weight": 0.9861153264872429,
-      "abs_weight": 0.9861153264872429,
-      "importance": 0.13205809946576408
-    },
-    "person_cosine_birth_death_match_product": {
-      "weight": 0.8246764437557482,
-      "abs_weight": 0.8246764437557482,
-      "importance": 0.11043860784976661
+      "weight": 1.7158422601975132,
+      "abs_weight": 1.7158422601975132,
+      "importance": 0.23789067577219686
     },
     "birth_death_match": {
-      "weight": 0.7126420798079665,
-      "abs_weight": 0.7126420798079665,
-      "importance": 0.09543524588955558
+      "weight": 1.625620281640098,
+      "abs_weight": 1.625620281640098,
+      "importance": 0.2253819691466487
     },
     "low_composite_penalty": {
-      "weight": -0.6950985024556263,
-      "abs_weight": 0.6950985024556263,
-      "importance": 0.09308585386536558
-    },
-    "person_provision_product": {
-      "weight": 0.6161230044163474,
-      "abs_weight": 0.6161230044163474,
-      "importance": 0.08250965258819754
+      "weight": -0.9530354943906411,
+      "abs_weight": 0.9530354943906411,
+      "importance": 0.1321323428468194
     },
     "birth_death_right": {
-      "weight": -0.32168457324340727,
-      "abs_weight": 0.32168457324340727,
-      "importance": 0.04307919391264964
+      "weight": -0.48016985914689925,
+      "abs_weight": 0.48016985914689925,
+      "importance": 0.06657251364396835
     },
     "birth_death_left": {
-      "weight": -0.2938334376442501,
-      "abs_weight": 0.2938334376442501,
-      "importance": 0.03934943945452789
-    },
-    "subjects_cosine": {
-      "weight": -0.16849767470633503,
-      "abs_weight": 0.16849767470633503,
-      "importance": 0.02256478739194103
-    },
-    "person_provision_harmonic": {
-      "weight": 0.14994963196030553,
-      "abs_weight": 0.14994963196030553,
-      "importance": 0.020080879873156415
+      "weight": -0.4280639338701818,
+      "abs_weight": 0.4280639338701818,
+      "importance": 0.05934835670171713
     },
     "person_subjects_harmonic": {
-      "weight": 0.06503591089386632,
-      "abs_weight": 0.06503591089386632,
-      "importance": 0.00870944661235815
+      "weight": 0.017932620442022568,
+      "abs_weight": 0.017932620442022568,
+      "importance": 0.0024862443910362683
     }
   },
   "training_duration": null

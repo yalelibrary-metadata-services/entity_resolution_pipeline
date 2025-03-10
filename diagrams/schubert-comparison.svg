@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 650" width="800" height="650">
+  <!-- Background -->
+  <rect width="800" height="650" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">Before and After Entity Resolution</text>
+  <text x="400" y="70" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">How "Franz Schubert" entities are disambiguated</text>
+  
+  <!-- "Before" Section -->
+  <text x="200" y="110" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold" fill="#d32f2f">BEFORE</text>
+  
+  <!-- Before: Catalog Interface Frame -->
+  <rect x="50" y="130" width="300" height="430" rx="5" fill="white" stroke="#ddd" stroke-width="2" />
+  
+  <!-- Before: Header Bar -->
+  <rect x="50" y="130" width="300" height="40" rx="5" fill="#f5f5f5" stroke="#ddd" stroke-width="1" />
+  <text x="200" y="155" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#333">Library Catalog</text>
+  
+  <!-- Before: Search Bar -->
+  <rect x="70" y="180" width="260" height="30" rx="5" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="190" y="200" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">Search: "Franz Schubert"</text>
+  <circle cx="310" y="195" r="10" fill="#f5f5f5" stroke="#ddd" stroke-width="1" />
+  <text x="310" y="200" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">🔍</text>
+  
+  <!-- Before: Results Label -->
+  <text x="70" y="225" font-family="Arial" font-size="12" fill="#666">Showing 5 of 42 results for "Franz Schubert"</text>
+  
+  <!-- Before: Search Results - Mixed entries for both Schuberts -->
+  <!-- Result 1 -->
+  <rect x="70" y="240" width="260" height="70" rx="2" fill="#f9f9f9" stroke="#eee" stroke-width="1" />
+  <text x="80" y="260" font-family="Arial" font-size="13" font-weight="bold" fill="#333">Symphony No. 9 in C Major</text>
+  <text x="80" y="280" font-family="Arial" font-size="12" fill="#333">Schubert, Franz, 1797-1828</text>
+  <text x="80" y="300" font-family="Arial" font-size="11" fill="#666">Musical composition - 1828</text>
+  
+  <!-- Result 2 -->
+  <rect x="70" y="320" width="260" height="70" rx="2" fill="#f9f9f9" stroke="#eee" stroke-width="1" />
+  <text x="80" y="340" font-family="Arial" font-size="13" font-weight="bold" fill="#333">Archäologie und Photographie</text>
+  <text x="80" y="360" font-family="Arial" font-size="12" fill="#333">Schubert, Franz</text>
+  <text x="80" y="380" font-family="Arial" font-size="11" fill="#666">Book - 1978</text>
+  
+  <!-- Result 3 -->
+  <rect x="70" y="400" width="260" height="70" rx="2" fill="#f9f9f9" stroke="#eee" stroke-width="1" />
+  <text x="80" y="420" font-family="Arial" font-size="13" font-weight="bold" fill="#333">Winterreise, D. 911</text>
+  <text x="80" y="440" font-family="Arial" font-size="12" fill="#333">Schubert, F.</text>
+  <text x="80" y="460" font-family="Arial" font-size="11" fill="#666">Musical composition - 1827</text>
+  
+  <!-- Result 4 -->
+  <rect x="70" y="480" width="260" height="70" rx="2" fill="#f9f9f9" stroke="#eee" stroke-width="1" />
+  <text x="80" y="500" font-family="Arial" font-size="13" font-weight="bold" fill="#333">Dresden Landscape Studies</text>
+  <text x="80" y="520" font-family="Arial" font-size="12" fill="#333">Schubert, Franz August</text>
+  <text x="80" y="540" font-family="Arial" font-size="11" fill="#666">Art collection - 1850</text>
+  
+  <!-- "After" Section -->
+  <text x="600" y="110" font-family="Arial" font-size="20" text-anchor="middle" font-weight="bold" fill="#1b5e20">AFTER</text>
+  
+  <!-- After: Catalog Interface Frame -->
+  <rect x="450" y="130" width="300" height="430" rx="5" fill="white" stroke="#ddd" stroke-width="2" />
+  
+  <!-- After: Header Bar -->
+  <rect x="450" y="130" width="300" height="40" rx="5" fill="#f5f5f5" stroke="#ddd" stroke-width="1" />
+  <text x="600" y="155" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#333">Library Catalog</text>
+  
+  <!-- After: Search Bar -->
+  <rect x="470" y="180" width="260" height="30" rx="5" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="590" y="200" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">Search: "Franz Schubert"</text>
+  <circle cx="710" y="195" r="10" fill="#f5f5f5" stroke="#ddd" stroke-width="1" />
+  <text x="710" y="200" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">🔍</text>
+  
+  <!-- After: Results Label -->
+  <text x="470" y="225" font-family="Arial" font-size="12" fill="#666">Showing 2 unique people named "Franz Schubert"</text>
+  
+  <!-- After: Person Cluster 1 - Composer -->
+  <rect x="470" y="240" width="260" height="160" rx="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1" />
+  <text x="480" y="260" font-family="Arial" font-size="14" font-weight="bold" fill="#2e7d32">Schubert, Franz (1797-1828)</text>
+  <text x="480" y="280" font-family="Arial" font-size="12" fill="#333">Austrian composer</text>
+  
+  <!-- Works associated with Composer -->
+  <rect x="480" y="290" width="240" height="25" rx="2" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="485" y="307" font-family="Arial" font-size="11" fill="#333">Symphony No. 9 in C Major (1828)</text>
+  
+  <rect x="480" y="325" width="240" height="25" rx="2" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="485" y="342" font-family="Arial" font-size="11" fill="#333">Winterreise, D. 911 (1827)</text>
+  
+  <rect x="480" y="360" width="240" height="25" rx="2" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="485" y="377" font-family="Arial" font-size="11" fill="#333">+36 more musical works</text>
+  
+  <!-- After: Person Cluster 2 - Artist -->
+  <rect x="470" y="410" width="260" height="140" rx="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1" />
+  <text x="480" y="430" font-family="Arial" font-size="14" font-weight="bold" fill="#2e7d32">Schubert, Franz August (1806-1893)</text>
+  <text x="480" y="450" font-family="Arial" font-size="12" fill="#333">German artist</text>
+  
+  <!-- Works associated with Artist -->
+  <rect x="480" y="460" width="240" height="25" rx="2" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="485" y="477" font-family="Arial" font-size="11" fill="#333">Dresden Landscape Studies (1850)</text>
+  
+  <rect x="480" y="495" width="240" height="25" rx="2" fill="white" stroke="#ddd" stroke-width="1" />
+  <text x="485" y="512" font-family="Arial" font-size="11" fill="#333">Archäologie und Photographie (1978)</text>
+  
+  <!-- Center Arrow pointing from left to right -->
+  <polygon points="410,300 370,280 370,320" fill="#666" />
+  <line x1="410" y1="300" x2="450" y2="300" stroke="#666" stroke-width="3" />
+  
+  <!-- Benefits Callouts -->
+  <!-- Benefit 1 -->
+  <rect x="50" y="580" width="300" height="30" rx="5" fill="#ffebee" stroke="#ffcdd2" stroke-width="1" />
+  <text x="200" y="600" font-family="Arial" font-size="12" text-anchor="middle" fill="#c62828">Ambiguous authorship and mixed identities</text>
+  
+  <!-- Benefit 2 -->
+  <rect x="450" y="580" width="300" height="30" rx="5" fill="#e8f5e9" stroke="#c8e6c9" stroke-width="1" />
+  <text x="600" y="600" font-family="Arial" font-size="12" text-anchor="middle" fill="#2e7d32">Clear separation of composer vs. artist works</text>
+  
+</svg>

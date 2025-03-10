@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <!-- Background -->
+  <rect width="800" height="450" fill="#f8f9fa" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">Entity Resolution Pipeline</text>
+  
+  <!-- Pipeline Stages Background Boxes - More spacing between elements -->
+  <rect x="60" y="80" width="120" height="90" rx="10" fill="#e3f2fd" stroke="#2196f3" stroke-width="2" />
+  <rect x="210" y="80" width="120" height="90" rx="10" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" />
+  <rect x="360" y="80" width="120" height="90" rx="10" fill="#fff3e0" stroke="#ff9800" stroke-width="2" />
+  <rect x="510" y="80" width="120" height="90" rx="10" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" />
+  <rect x="660" y="80" width="120" height="90" rx="10" fill="#e1f5fe" stroke="#03a9f4" stroke-width="2" />
+  
+  <!-- Stage Titles - Improved positioning -->
+  <text x="120" y="105" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#0d47a1">Preprocessing</text>
+  <text x="270" y="105" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#1b5e20">Vector Embedding</text>
+  <text x="420" y="105" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#e65100">Similarity Search</text>
+  <text x="570" y="105" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#4a148c">Classification</text>
+  <text x="720" y="105" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#01579b">Clustering</text>
+  
+  <!-- Stage Icons - Better positioned -->
+  <!-- Preprocessing Icon -->
+  <rect x="95" y="115" width="50" height="35" fill="#bbdefb" rx="5" />
+  <line x1="105" y1="125" x2="135" y2="125" stroke="#0d47a1" stroke-width="2" />
+  <line x1="105" y1="132" x2="125" y2="132" stroke="#0d47a1" stroke-width="2" />
+  <line x1="105" y1="139" x2="130" y2="139" stroke="#0d47a1" stroke-width="2" />
+  
+  <!-- Vector Embedding Icon -->
+  <circle cx="245" cy="132" r="5" fill="#81c784" />
+  <circle cx="260" cy="125" r="5" fill="#81c784" />
+  <circle cx="275" cy="140" r="5" fill="#81c784" />
+  <circle cx="290" cy="120" r="5" fill="#81c784" />
+  <line x1="245" y1="132" x2="260" y2="125" stroke="#1b5e20" stroke-width="1" />
+  <line x1="260" y1="125" x2="275" y2="140" stroke="#1b5e20" stroke-width="1" />
+  <line x1="275" y1="140" x2="290" y2="120" stroke="#1b5e20" stroke-width="1" />
+  
+  <!-- Similarity Search Icon -->
+  <circle cx="400" cy="132" r="15" fill="none" stroke="#e65100" stroke-width="2" />
+  <line x1="410" y1="142" x2="425" y2="155" stroke="#e65100" stroke-width="2" />
+  <line x1="395" y1="125" x2="405" y2="125" stroke="#e65100" stroke-width="2" />
+  <line x1="400" y1="120" x2="400" y2="130" stroke="#e65100" stroke-width="2" />
+  
+  <!-- Classification Icon -->
+  <rect x="545" y="120" width="15" height="15" fill="#ce93d8" />
+  <circle cx="580" cy="128" r="10" fill="#ce93d8" />
+  <line x1="555" y1="140" x2="585" y2="140" stroke="#4a148c" stroke-width="2" />
+  
+  <!-- Clustering Icon -->
+  <circle cx="705" cy="120" r="6" fill="#b3e5fc" />
+  <circle cx="720" cy="125" r="6" fill="#b3e5fc" />
+  <circle cx="715" cy="140" r="6" fill="#b3e5fc" />
+  <circle cx="730" cy="135" r="6" fill="#b3e5fc" />
+  <line x1="705" y1="120" x2="720" y2="125" stroke="#01579b" stroke-width="1" />
+  <line x1="720" y1="125" x2="715" y2="140" stroke="#01579b" stroke-width="1" />
+  <line x1="715" y1="140" x2="730" y2="135" stroke="#01579b" stroke-width="1" />
+  <line x1="730" y1="135" x2="705" y2="120" stroke="#01579b" stroke-width="1" />
+  
+  <!-- Connecting Arrows - Better spacing -->
+  <polygon points="185,125 210,125 205,120 210,125 205,130" fill="#555" />
+  <line x1="180" y1="125" x2="210" y2="125" stroke="#555" stroke-width="2" />
+  
+  <polygon points="335,125 360,125 355,120 360,125 355,130" fill="#555" />
+  <line x1="330" y1="125" x2="360" y2="125" stroke="#555" stroke-width="2" />
+  
+  <polygon points="485,125 510,125 505,120 510,125 505,130" fill="#555" />
+  <line x1="480" y1="125" x2="510" y2="125" stroke="#555" stroke-width="2" />
+  
+  <polygon points="635,125 660,125 655,120 660,125 655,130" fill="#555" />
+  <line x1="630" y1="125" x2="660" y2="125" stroke="#555" stroke-width="2" />
+  
+  <!-- Input Records Example - More spacing and improved text containment -->
+  <rect x="60" y="200" width="260" height="180" rx="5" fill="white" stroke="#ccc" stroke-width="1" />
+  <text x="75" y="225" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Input: Library Records</text>
+  <text x="75" y="255" font-family="Arial" font-size="12" fill="#555">"Schubert, Franz, 1797-1828"</text>
+  <text x="75" y="285" font-family="Arial" font-size="12" fill="#555">"Franz Schubert"</text>
+  <text x="75" y="315" font-family="Arial" font-size="12" fill="#555">"Schubert, F."</text>
+  <text x="75" y="345" font-family="Arial" font-size="12" fill="#555">"Schubert, François"</text>
+  
+  <!-- Vector Representation - Better spacing -->
+  <rect x="340" y="200" width="140" height="180" rx="5" fill="white" stroke="#ccc" stroke-width="1" />
+  <text x="410" y="225" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle" fill="#333">Vector Space</text>
+  <circle cx="380" cy="270" r="5" fill="#2196f3" />
+  <circle cx="410" cy="290" r="5" fill="#2196f3" />
+  <circle cx="395" cy="320" r="5" fill="#2196f3" />
+  <circle cx="425" cy="295" r="5" fill="#2196f3" />
+  <line x1="380" y1="270" x2="410" y2="290" stroke="#2196f3" stroke-width="1" stroke-dasharray="2" />
+  <line x1="410" y1="290" x2="395" y2="320" stroke="#2196f3" stroke-width="1" stroke-dasharray="2" />
+  <line x1="395" y1="320" x2="425" y2="295" stroke="#2196f3" stroke-width="1" stroke-dasharray="2" />
+  <line x1="425" y1="295" x2="380" y2="270" stroke="#2196f3" stroke-width="1" stroke-dasharray="2" />
+  
+  <!-- Output Result - Better spacing and text containment -->
+  <rect x="500" y="200" width="260" height="180" rx="5" fill="white" stroke="#ccc" stroke-width="1" />
+  <text x="515" y="225" font-family="Arial" font-size="14" font-weight="bold" fill="#333">Output: Resolved Entities</text>
+  <rect x="515" y="245" width="230" height="120" rx="3" fill="#e3f2fd" stroke="#2196f3" stroke-width="1" />
+  <text x="525" y="270" font-family="Arial" font-size="13" font-weight="bold" fill="#0d47a1">Person: Schubert, Franz</text>
+  <text x="525" y="295" font-family="Arial" font-size="12" fill="#555">• Schubert, Franz, 1797-1828</text>
+  <text x="525" y="320" font-family="Arial" font-size="12" fill="#555">• Franz Schubert</text>
+  <text x="525" y="345" font-family="Arial" font-size="12" fill="#555">• Schubert, F.</text>
+
+  <!-- Key Performance Stats - Better spacing and line breaking -->
+  <rect x="60" y="400" width="700" height="30" rx="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="1" />
+  <text x="410" y="420" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold" fill="#0d47a1">Performance: 94% Accuracy • 100% Precision • 88% Recall</text>
+</svg>

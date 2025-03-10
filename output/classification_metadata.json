@@ -1,6 +1,6 @@
 {
   "model_path": "tmp/classification_model.pkl",
-  "feature_count": 12,
+  "feature_count": 7,
   "decision_threshold": 0.95,
   "feature_names": [
     "birth_death_left",
@@ -8,13 +8,8 @@
     "birth_death_right",
     "composite_cosine",
     "low_composite_penalty",
-    "person_cosine",
-    "person_cosine_birth_death_match_product",
-    "person_provision_harmonic",
-    "person_provision_product",
     "person_subjects_harmonic",
-    "person_title_harmonic",
-    "subjects_cosine"
+    "person_title_harmonic"
   ],
   "test_results_path": "output/test_results_detailed.csv"
 }

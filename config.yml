@@ -171,12 +171,12 @@ feature_selection:
   base_features:
     - "person_cosine"
     - "composite_cosine"
-    - "subjects_cosine"
+    #- "subjects_cosine"
     # Add or remove features as needed
   
   interaction_features:
     - "person_title_harmonic"
-    - "person_provision_harmonic"
+    #- "person_provision_harmonic"
     - "person_subjects_harmonic"
     # Add or remove features as needed
   

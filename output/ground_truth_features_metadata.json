@@ -2,7 +2,7 @@
   "feature_set_path": "tmp/ground_truth_features.pkl",
   "scaler_path": "tmp/feature_scaler.pkl",
   "rfe_path": null,
-  "feature_count": 10,
+  "feature_count": 8,
   "pair_count": 77559,
   "processed_pairs": 77560,
   "feature_names": [
@@ -12,9 +12,7 @@
     "composite_cosine",
     "low_composite_penalty",
     "person_cosine",
-    "person_provision_harmonic",
     "person_subjects_harmonic",
-    "person_title_harmonic",
-    "subjects_cosine"
+    "person_title_harmonic"
   ]
 }
