@@ -1,0 +1,849 @@
+# Entity Resolution Pipeline Configuration
+
+# Global Random Seed for Deterministic Behavior
+random_seed: 42
+
+# Directory Paths
+input_dir: "data/input/training/tmp"
+output_dir: "data/output"
+checkpoint_dir: "data/checkpoints"
+ground_truth_dir: "data/ground_truth"
+log_dir: "logs"
+
+# Taxonomy Configuration
+taxonomy_path: "data/input/revised_taxonomy_final.json"
+classified_data_path: "data/input/training/tmp/training_dataset_classified_2025-07-05.csv"
+
+# Pipeline Configuration
+log_level: "INFO"
+debug_features: false
+vector_diagnostics_verbose: false
+embed_fields: ["composite", "person", "title", "roles", "subjects", "genres", "marcKey", "relatedWork"]
+skip_fields: ["attribution", "provision", "recordId", "personId"]
+
+# Entity Matching Enhancement Configuration
+entity_matching:
+  enhancement_aggressiveness: "aggressive"  # Options: none, minimal, moderate, aggressive
+
+# Feature Scaling Configuration
+use_enhanced_scaling: true  # Set to true to enable LibraryCatalogScaler, false for raw features
+scaling_config_path: "scaling_config.yml"
+
+# Resource Allocation - Environment-specific configuration
+# Set environment with PIPELINE_ENV=prod or PIPELINE_ENV=local (default: local)
+
+# Local Development Configuration (default) - TIER 4 OPTIMIZED
+local_resources:
+  preprocessing_workers: 4
+  preprocessing_batch_size: 50
+  preprocessing_use_optimized: true
+  embedding_workers: 6                   # OPTIMIZED: 4 → 6 workers for Tier 4 limits
+  embedding_batch_size: 512              # OPTIMIZED: 32 → 512 (16x speedup)
+  embedding_checkpoint_batch: 2000       # INCREASED: 1000 → 2000
+  feature_workers: 4
+  feature_batch_size: 1000
+  classification_workers: 8
+  classification_batch_size: 500
+
+# Production Configuration (64 cores, 247GB RAM) - TIER 4 OPTIMIZED
+prod_resources:
+  preprocessing_workers: 32               # Utilize half cores for I/O bound preprocessing
+  preprocessing_batch_size: 500          # Larger batches for better memory utilization  
+  preprocessing_use_optimized: true      # Use SQLite-based preprocessing for large datasets
+  embedding_workers: 12                  # OPTIMIZED: Balanced for Tier 4 rate limits
+  embedding_batch_size: 1024             # OPTIMIZED: Maximum efficiency for production
+  embedding_checkpoint_batch: 5000       # OPTIMIZED: Balance between performance and safety
+  feature_workers: 48                    # High parallelism for CPU-intensive feature computation
+  feature_batch_size: 5000               # Large batches to utilize available RAM
+  classification_workers: 32             # High parallelism for classification
+  classification_batch_size: 2000        # Large batches for efficient processing
+
+# Active configuration (will be set by environment) - TIER 4 OPTIMIZED
+preprocessing_workers: 4
+preprocessing_batch_size: 50
+preprocessing_use_optimized: true
+embedding_workers: 6                     # OPTIMIZED: 4 → 6 workers for Tier 4
+embedding_batch_size: 512                # OPTIMIZED: 32 → 512 (16x speedup)
+embedding_checkpoint_batch: 2000         # INCREASED: 1000 → 2000
+feature_workers: 4
+feature_batch_size: 1000
+classification_workers: 8
+classification_batch_size: 500
+
+# File Names
+labeled_matches_file: "labeled_matches.csv"
+training_dataset_file: "training_dataset.csv"
+
+# Embedding Provider Configuration
+embedding:
+  # Active provider selection
+  provider: "openai"  # Options: openai, mistral, huggingface, jina, cohere, jina_colbert, voyageai
+  
+  # Provider-specific configurations
+  providers:
+    openai:
+      model: "text-embedding-3-small"
+      dimensions: 1536
+      api_key_env: "OPENAI_API_KEY"
+      api_base: "https://api.openai.com/v1"
+      
+      # Rate limiting - TIER 4 LIMITS (2025-07-02)
+      batch_size: 512
+      max_tokens_per_minute: 4800000        # 96% of Tier 4 limit (5M TPM)
+      max_requests_per_minute: 9500         # 95% of Tier 4 limit (10K RPM)
+      max_tokens_per_day: 480000000         # 96% of Tier 4 limit (500M TPD)
+      
+      # Daily usage monitoring
+      tpd_poll_interval: 300                # OPTIMIZED: 5min polling for faster recovery
+      tpd_resume_threshold: 50000000        # OPTIMIZED: Resume when 50M tokens available
+      
+      # Batch API settings
+      supports_batch: true
+      batch_endpoint: "/v1/embeddings/batch"
+      max_batch_size: 50000
+      
+    mistral:
+      model: "mistral-embed"
+      dimensions: 1024
+      api_key_env: "MISTRAL_API_KEY"
+      api_base: "https://api.mistral.ai/v1"
+      
+      # Rate limiting - Mistral's actual limits  
+      batch_size: 25                      # Very conservative batch size for Mistral API
+      rate_limit_delay: 0.5               # Increased delay to avoid rate limits
+      max_tokens_per_minute: 19000000     # 95% of 20M TPM limit for safety
+      max_requests_per_minute: 360        # 6 RPS = 360 RPM (Mistral's actual limit)
+      max_tokens_per_month: 190000000000  # 95% of 200B TPM limit for safety
+      
+      # Batch API settings
+      supports_batch: false
+      
+    huggingface:
+      model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+      dimensions: 384
+      device: "cpu"  # or "cuda"
+      
+      # Local model settings
+      batch_size: 256
+      max_length: 512
+      normalize_embeddings: true
+      
+      # No API rate limits for local models
+      supports_batch: false
+      
+    jina:
+      model: "jina-embeddings-v3"
+      dimensions: 1024  # Can be customized for v3
+      api_key_env: "JINA_API_KEY"
+      api_base: "https://api.jina.ai/v1"
+      
+      # Task type for v3 models
+      task_type: "retrieval.passage"  # Options: retrieval.passage, retrieval.query, text-matching, classification, separation
+      
+      # Rate limiting - Jina's actual limits
+      batch_size: 100
+      rate_limit_delay: 0.1
+      max_requests_per_minute: 500  # 500 RPM
+      max_tokens_per_minute: 1000000  # 1M TPM
+      
+      # Batch API settings
+      supports_batch: true
+      
+    cohere:
+      model: "embed-multilingual-v3.0"
+      dimensions: 1024
+      api_key_env: "COHERE_API_KEY"
+      api_base: "https://api.cohere.ai/v1"
+      
+      # Input type for embeddings
+      input_type: "search_document"  # Options: search_document, search_query, classification, clustering
+      
+      # Truncation setting
+      truncate: "END"  # Options: NONE, START, END
+      
+      # Rate limiting - Cohere's limits
+      batch_size: 96  # Cohere supports up to 96 texts per request
+      rate_limit_delay: 0.1
+      max_requests_per_minute: 100
+      max_tokens_per_minute: 10000000  # 10M TPM
+      
+      # Batch API settings
+      supports_batch: true
+      
+    jina_colbert:
+      model: "jina-colbert-v2"
+      dimensions: 128  # Per-token embedding size (ColBERT generates one 128D vector per token)
+      api_key_env: "JINA_API_KEY"
+      api_base: "https://api.jina.ai/v1"
+      
+      # ColBERT specific settings
+      max_tokens_per_text: 8192  # Jina ColBERT v2 supports up to 8,192 tokens (extendable to 12,288)
+      
+      # MUVERA compression configuration
+      # Note: Index dimensions = (2^ksim) * dprojections * repetitions
+      # Default: (2^8) * 16 * 1 = 256 * 16 * 1 = 4096 dimensions
+      muvera:
+        enabled: true
+        ksim: 8  # Number of Gaussian buckets (2^8 = 256 buckets)
+        dprojections: 16  # Dimensionality of sub-vectors
+        repetitions: 1  # Number of encoding iterations
+      
+      # Rate limiting for multi-vector processing
+      batch_size: 4  # Reduced from 32 to avoid timeouts with long texts
+      rate_limit_delay: 0.5  # Increased delay for stability
+      max_requests_per_minute: 500  # Jina's actual limit
+      max_tokens_per_minute: 1000000  # 1M TPM - Jina's actual limit
+      
+      # Batch API settings
+      supports_batch: true
+      
+    voyageai:
+      model: "voyage-3-large"
+      dimensions: 1024  # Supports 2048, 1024, 512, 256
+      api_key_env: "VOYAGEAI_APIKEY"
+      api_base: "https://api.voyageai.com"
+      
+      # voyage-3-large specific settings
+      output_dimension: 1024  # Using 1024D embeddings
+      output_dtype: "float"  # Options: float, int8, binary
+      
+      # Rate limiting - Tier 1 limits
+      batch_size: 128  # Max 128 texts per request
+      rate_limit_delay: 0.03  # 30ms between requests
+      max_requests_per_minute: 2000  # Tier 1: 2000 RPM
+      max_tokens_per_minute: 8000000  # Tier 1: 8M TPM
+      
+      # Token limits
+      max_tokens_per_request: 32000  # 32K context length for voyage-3-large
+      
+      # Batch API settings
+      supports_batch: false
+
+# Legacy Configuration (for backward compatibility)
+embedding_model: "text-embedding-3-small"
+embedding_dimensions: 1536
+max_tokens_per_minute: 4800000
+max_requests_per_minute: 9500
+max_tokens_per_day: 480000000
+tpd_poll_interval: 300
+tpd_resume_threshold: 50000000
+
+# Batch Processing Configuration
+use_batch_embeddings: true   # Set to true to use OpenAI Batch API (50% cost savings, 24h turnaround)
+batch_embedding_size: 50000  # Number of requests per batch file (max 50,000)
+max_requests_per_file: 50000  # Maximum requests per JSONL file
+batch_manual_polling: true   # Set to true for manual polling, false for automatic polling
+batch_poll_interval: 300     # Seconds between status polls when auto-polling (5 minutes)
+batch_max_wait_time: 86400   # Maximum wait time for batch completion (24 hours)
+
+# Automated Queue Management Configuration - FIXED (2025-07-04)
+use_automated_queue: true           # Enable automated 16-batch queue system
+max_active_batches: 16              # Maximum concurrent batches (default: 16)  
+queue_poll_interval: 1800           # 30 minutes between status checks (default: 1800)
+request_quota_limit: 816000         # FIXED: Set to 102% of 800K (816K) as safety buffer
+request_quota_target: 800000        # ADDED: Actual target of exactly 800K requests
+
+# Error Handling Configuration
+error_handling:
+  # Retry Configuration
+  max_retry_attempts: 3              # Maximum retry attempts for failed individual requests
+  enable_automatic_retries: true     # Enable automatic retry batch creation
+  retry_batch_creation: true         # Create retry batches during automated queue processing
+  
+  # Exponential Backoff Settings
+  initial_retry_delay: 300           # Initial delay between retries (5 minutes)
+  max_retry_delay: 3600              # Maximum delay between retries (1 hour)
+  backoff_multiplier: 2              # Exponential backoff multiplier
+  
+  # Error Categorization
+  retryable_error_types:             # Error types that should be retried
+    - "rate_limit"
+    - "server"
+    - "quota"                        # Only if quota is temporarily exceeded
+  
+  permanent_error_types:             # Error types that should not be retried
+    - "validation"                   # Invalid request format - won't succeed on retry
+  
+  # Error Reporting
+  enable_detailed_error_reporting: true  # Show detailed error analysis in status reports
+  max_sample_errors: 10              # Maximum number of sample errors to collect per batch
+  
+  # Cleanup Configuration
+  cleanup_successful_retries: true   # Remove successfully retried requests from failed tracking
+  preserve_error_history: false      # Keep error history for successfully retried requests
+
+# Weaviate Configuration - Environment-specific
+
+# Local Development Weaviate Settings
+local_weaviate:
+  weaviate_url: "http://localhost:8080"
+  weaviate_timeout: 300
+  weaviate_batch_size: 100
+  weaviate_ef: 128
+  weaviate_max_connections: 64
+  weaviate_ef_construction: 128
+  weaviate_grpc_max_receive_size: 104857600  # 100MB
+  weaviate_connection_pool_size: 16
+  weaviate_query_concurrent_limit: 4
+
+# Production Weaviate Settings (optimized for 64 cores, 247GB RAM)
+prod_weaviate:
+  weaviate_url: "http://localhost:8080"
+  weaviate_timeout: 600                    # Longer timeout for large operations
+  weaviate_batch_size: 1000               # Much larger batch sizes
+  weaviate_ef: 256                        # Higher EF for better recall
+  weaviate_max_connections: 128           # More connections for parallelism
+  weaviate_ef_construction: 256           # Higher construction parameter
+  weaviate_grpc_max_receive_size: 536870912  # 512MB for very large responses
+  weaviate_connection_pool_size: 64       # Match available cores
+  weaviate_query_concurrent_limit: 32     # High concurrency for production
+
+# Active Weaviate configuration - OPTIMIZED FOR 45M OBJECTS (MASSIVE SCALE)
+weaviate_url: "http://localhost:8080"
+weaviate_timeout: 1800                  # MASSIVE SCALE: 30min timeout for complex aggregations on 45M objects
+weaviate_batch_size: 2000               # MASSIVE SCALE: Maximum batch sizes for 45M object throughput
+weaviate_ef: 512                        # MASSIVE SCALE: Higher EF for excellent recall on 45M objects
+weaviate_max_connections: 256           # MASSIVE SCALE: Maximum connections for massive parallelism
+weaviate_ef_construction: 512           # MASSIVE SCALE: High construction parameter for optimal indexing
+weaviate_grpc_max_receive_size: 1073741824  # MASSIVE SCALE: 1GB for very large aggregation responses
+weaviate_connection_pool_size: 64       # MASSIVE SCALE: Large connection pool for 45M objects
+weaviate_query_concurrent_limit: 32     # MASSIVE SCALE: Maximum concurrency for production scale
+# HTTP client timeout configurations for massive scale operations
+weaviate_http_timeout: 1800             # MASSIVE SCALE: 30min HTTP timeout for long aggregations
+weaviate_connect_timeout: 60            # MASSIVE SCALE: 1min connection timeout
+weaviate_read_timeout: 1800             # MASSIVE SCALE: 30min read timeout
+weaviate_write_timeout: 300             # MASSIVE SCALE: 5min write timeout
+weaviate_pool_timeout: 60               # MASSIVE SCALE: 1min connection pool timeout
+weaviate_keepalive_timeout: 300         # MASSIVE SCALE: 5min keepalive timeout
+
+# Enhanced Vector Search Configuration
+weaviate:
+  base_search_limit: 5000      # Starting point for candidate retrieval
+  max_retrieval_limit: 50000   # Maximum candidates for any single vector
+  batch_size: 10000            # Size of each batch for retrieval
+  enable_progressive_retrieval: false  # Enable multi-batch retrieval
+
+# Cluster Validation Configuration - Environment-specific
+
+# Local Development Cluster Validation
+local_cluster_validation:
+  enabled: true
+  similarity_threshold: 0.50
+  coherence_threshold: 0.50
+  small_cluster_threshold: 2
+  min_cluster_size: 2
+  adaptive_validation: true
+  large_cluster_threshold: 1000
+  use_vector_based_validation: true
+  use_composite_only_validation: true
+  use_parallel: true
+  parallel_workers: 8
+  debug_problematic_pairs: true
+  debug_similarity_threshold: 0.65
+
+# Production Cluster Validation (optimized for 64 cores, 247GB RAM)
+prod_cluster_validation:
+  enabled: true
+  similarity_threshold: 0.50
+  coherence_threshold: 0.50
+  small_cluster_threshold: 2
+  min_cluster_size: 2
+  adaptive_validation: true
+  large_cluster_threshold: 1000
+  use_vector_based_validation: true
+  use_composite_only_validation: true
+  use_parallel: true
+  parallel_workers: 48          # Much higher parallelism for production
+  debug_problematic_pairs: true
+  debug_similarity_threshold: 0.65
+
+# Active cluster validation configuration (default to local)
+cluster_validation:
+  enabled: false                # Disable cluster validation (it SPLITS clusters, we need MERGING)
+  similarity_threshold: 0.50    # Decreased to allow more merging of clusters
+  coherence_threshold: 0.50     # Decreased to be more inclusive
+  small_cluster_threshold: 2    # Validate all clusters except pairs
+  min_cluster_size: 2           # Allow pairs to form clusters
+  adaptive_validation: true     # Automatically choose validation method based on cluster size
+  large_cluster_threshold: 1000  # Clusters larger than this use vector-based validation
+  use_vector_based_validation: true  # Whether to force vector-based validation for all clusters
+  use_composite_only_validation: true  # When true, only use composite field for centroid validation
+  use_parallel: true            # Whether to use parallel processing for validation
+  parallel_workers: 8           # Number of worker processes for parallel validation  
+  debug_problematic_pairs: true   # Enable debugging for problematic pairs (entities with low similarity)
+  debug_similarity_threshold: 0.65 # Adjusted to match new similarity threshold
+
+# Clustering Configuration
+clustering:
+  use_strict_clustering: false   # Disable strict clustering to allow more aggressive merging
+  min_edge_confidence: 0.55     # Clustering threshold: allows lower-confidence "bridge" connections
+  require_multiple_connections: false  # If true, entities need multiple high-confidence connections
+  min_connections: 2            # Minimum number of connections required when require_multiple_connections is true
+  use_bridge_connections: true   # Use lower-confidence connections for clustering connectivity only
+
+# Similarity Thresholds - Moderately adjusted for balanced merging
+person_similarity_threshold: 0.70     # Moderately adjusted threshold
+title_similarity_threshold: 0.50      # Moderately adjusted threshold
+composite_similarity_threshold: 0.55  # Moderately adjusted threshold
+levenshtein_threshold: 0.6            # Original threshold
+vector_similarity_threshold: 0.7      # Original threshold
+
+# Classification Parameters
+learning_rate: 0.01
+max_iterations: 1000
+training_batch_size: 256
+convergence_threshold: 0.00001
+l2_lambda: 0.01
+class_weight: 5.0
+early_stopping_patience: 10
+decision_threshold: 0.55 #0.2778 #0.68  # Restored to validated threshold
+
+# GraphML Export Configuration
+graphml_export:
+  large_dataset_threshold: 5000  # Entity count threshold to switch to streaming approach
+  batch_size: 1000  # Number of nodes/edges to process in a single batch
+  sampling_threshold: 100000  # Entity count threshold to enable edge sampling
+  sampling_rate: 0.1  # Rate at which edges are sampled in very large clusters
+  use_sampling: true  # Enable/disable edge sampling for very large datasets
+
+# GRPC Tuning
+grpc_keepalive_time_ms: 60000  # 60 seconds
+grpc_keepalive_timeout_ms: 30000  # 30 seconds
+grpc_keepalive_without_calls: true
+grpc_http2_max_pings_without_data: 5
+
+# Feature Engineering Parameters
+features:
+  # Configure similarity metric selection
+  similarity_metrics:
+    use_binary_indicators: true        # If true, use binary indicators; if false, use direct similarity values
+    include_both_metrics: true        # If true, include both binary and direct metrics
+    
+  enabled:
+    #- person_low_levenshtein_indicator  # Binary indicator version (used when use_binary_indicators=true)
+    #- person_low_jaro_winkler_indicator # Binary indicator version (used when use_binary_indicators=true)
+    - person_cosine
+    #- person_low_cosine_indicator       # Binary indicator for cosine similarity
+    #- person_levenshtein_similarity     # Direct similarity version (used when use_binary_indicators=false)
+    #- person_jaro_winkler_similarity    # Direct similarity version (used when use_binary_indicators=false)
+    #- person_title_squared
+    #- person_role_squared
+    #- composite_cosine
+    - taxonomy_dissimilarity             # Domain-based dissimilarity from SetFit classification
+    - composite_cosine_squared          # New squared version of composite cosine
+    - has_related_work                  # Binary: 1.0 if both entities have relatedWork, 0.0 otherwise
+    #- marcKey_cosine
+    #- marcKey_title_squared             # New marcKey/title harmonic mean squared
+    #- roles_cosine_weighted             # NEW: Role similarity with compatibility weighting
+    - birth_death_match
+    #- title_cosine_squared
+    #- combined_title_person
+    #- title_role_adjusted
+    #- combined_person_title_role_adjusted
+    - confidence_amplifier_polynomial
+    - person_title_interaction_cubic
+    #- marc_roles_polynomial_interaction
+    #- evidence_strength_weighted
+    #- harmonic_mean_primary_features
+    #- geometric_confidence_scaling
+    #- person_title_adjusted_squared
+  parameters:
+    # Binary indicator versions
+    person_low_levenshtein_indicator:
+      threshold: 0.60
+    person_low_jaro_winkler_indicator:
+      threshold: 0.90
+    person_low_cosine_indicator:
+      threshold: 0.80
+    
+    # Direct similarity versions
+    person_levenshtein_similarity:
+      weight: 2.0
+    person_jaro_winkler_similarity:
+      weight: 1.0
+    
+    # Cosine similarity features
+    person_cosine:
+      weight: 1.0
+      fallback_value: 0.5
+    
+    person_title_squared:
+      weight: 1.0
+    composite_cosine:
+      weight: 1.0
+    roles_cosine:
+      weight: 1.0
+    roles_cosine_weighted:
+      weight: 1.0
+      fallback_value: 0.5
+    marcKey_cosine:
+      weight: 1.0
+    person_role_squared:
+      weight: 1.0
+    birth_death_match:
+      tolerance: 2
+      weight: 1.0
+    title_cosine_squared:
+      weight: 1.0
+    title_role_adjusted:
+      weight: 1.0
+      default_weight: 0.6
+    person_title_adjusted_squared:
+      weight: 1.2
+    marcKey_title_squared:
+      weight: 1.0
+    composite_cosine_squared:
+      weight: 1.0
+    taxonomy_dissimilarity:
+      weight: 0.5  # Reduced weight - same domain doesn't strongly indicate same person
+    
+    # Non-linear feature transformation parameters
+    confidence_amplifier_exponential:
+      weight: 1.0
+      amplification_factor: 2.0
+      threshold: 0.8
+      dampen_factor: 0.5
+    
+    confidence_amplifier_polynomial:
+      weight: 1.0
+      coeff_a: 0.5     # Cubic coefficient
+      coeff_b: -0.3    # Quadratic coefficient
+      coeff_c: 0.8     # Linear coefficient
+    
+    person_title_interaction_cubic:
+      weight: 1.0
+      interaction_weight: 0.7
+      individual_weight: 0.3
+    
+    marc_roles_polynomial_interaction:
+      weight: 1.0
+    
+    confidence_cascade_indicator:
+      weight: 1.0
+      thresholds: [0.95, 0.85, 0.70]
+      confidence_levels: [1.0, 0.8, 0.6, 0.2]
+      person_weight: 0.6
+      composite_weight: 0.4
+    
+    evidence_strength_weighted:
+      weight: 1.0
+      person_reliability: 0.5
+      marc_reliability: 0.8
+      birth_death_reliability: 1.0
+    
+    harmonic_mean_primary_features:
+      weight: 1.0
+      epsilon: 0.00000001
+    
+    geometric_confidence_scaling:
+      weight: 1.0
+      variance_penalty: 1.0
+    
+    has_related_work:
+      weight: 1.0
+
+# Role Configuration for title_role_adjusted feature
+role_weights:
+  # Subject: person is the subject of the work
+  "Subject": 
+    "title": 0.5      # Titles moderately important for subjects
+  
+  # Associated person: person has an unspecified association with the work
+  "Associated person": 
+    "title": 0.2      # Titles less important for associated persons
+  
+  # Contributor: person contributed to the work in an unspecified way
+  "Contributor": 
+    "title": 0.6      # Titles more important for contributors
+  
+  # CreativeRole: catch-all for any specific creative role
+  "CreativeRole": 
+    "title": 0.9      # Titles highly important for creative roles
+
+# Role compatibility matrix for title_role_adjusted feature
+role_compatibility:
+  # Same roles are perfectly compatible
+  "Subject-Subject": 1.0
+  "Associated person-Associated person": 1.0
+  "Contributor-Contributor": 1.0
+  "CreativeRole-CreativeRole": 1.0
+  
+  # Cross-role compatibilities (revised to recognize Subject-Creator overlap)
+  "Subject-Associated person": 0.4     # Subject and Associated person are somewhat different
+  "Subject-Contributor": 0.6    # Subject and Contributor often same entity
+  "Subject-CreativeRole": 0.6   # Subject and CreativeRole often same entity
+  
+  # Associated person has lower compatibility with creative roles
+  "Associated person-Contributor": 0.4
+  "Associated person-CreativeRole": 0.4
+  
+  # Contributor and CreativeRole are more compatible
+  "Contributor-CreativeRole": 0.6
+
+# Custom Feature Configuration
+custom_features:
+  # Example of a weighted field similarity feature
+  provision_similarity:
+    enabled: false    # Disabled by default
+    type: "weighted_field_similarity"
+    field: "provision"
+    weight: 0.5
+    power: 1.0
+  
+  # Example of a composite feature
+  combined_title_person:
+    enabled: false
+    type: "composite_feature"
+    components:
+      - "person_title_squared"
+      - "roles_cosine"
+    operation: "add"
+    weight: 1.0
+  
+  combined_person_title_role_adjusted:
+    enabled: false     # Enabled for testing
+    type: "composite_feature"
+    components:
+      #- "person_title_squared"      
+      #- "person_role_squared"
+      - "roles_cosine_weighted"       # NEW: Using weighted version
+      #- "person_title_squared"
+      - "title_role_adjusted"
+      - "marcKey_cosine"
+      #- "composite_cosine"
+      #- "title_cosine_squared"
+    operation: "multiply"
+    weight: 1.2
+    
+# Feature Substitution Configuration
+feature_substitutions:
+  # Map custom features to core features that should be replaced
+  # When a custom feature is enabled, it will replace the specified core features
+  # This avoids having to calculate base features when they are only used in a custom feature
+  combined_person_title_role_adjusted:
+    replaces:
+      #- "person_title_squared"   # Replace this core feature
+      #- "person_role_squared" 
+      - "roles_cosine_weighted"   # Replace the weighted role feature
+      - "title_role_adjusted"     # Also replace this core feature
+      #- "title_cosine_squared"   # Also replace this core feature
+      - "marcKey_cosine"
+      
+  person_title_adjusted_squared:
+    replaces:
+      - "person_title_squared"   # Replace this core feature
+      - "title_role_adjusted"    # Also used within the calculation
+    
+      
+  combined_title_person:
+    replaces:
+      - "title_cosine_squared"   # Replace this core feature when combined_title_person is enabled
+      - "person_title_squared"
+
+# Query Parameters
+query_limit: 100
+query_batch_size: 20
+
+# Cache Management - Environment-specific
+
+# Local Development Cache Settings
+local_cache:
+  disable_feature_caching: false
+  string_cache_size: 100000
+  vector_cache_size: 50000
+  similarity_cache_size: 200000
+
+# Production Cache Settings (optimized for 247GB RAM)
+prod_cache:
+  disable_feature_caching: false
+  string_cache_size: 2000000      # 20x larger for production
+  vector_cache_size: 1000000      # 20x larger for production
+  similarity_cache_size: 5000000  # 25x larger for production
+
+# Active cache configuration (default to local)
+disable_feature_caching: false
+string_cache_size: 100000
+vector_cache_size: 50000
+similarity_cache_size: 200000
+
+# Subject Enhancement Configuration
+# Automated quality improvement and imputation for subject fields using composite field semantic similarity
+
+# Subject Quality Audit Configuration
+subject_quality_audit:
+  enabled: true                      # Enable automatic subject quality audit
+  similarity_threshold: 0.70         # Minimum composite similarity to consider alternatives
+  remediation_threshold: 0.60        # Quality score threshold below which remediation is applied
+  min_alternatives: 3                # Minimum number of alternative subjects required for evaluation
+  max_candidates: 100                # Maximum candidate composites to consider
+  frequency_weight: 0.3              # Weight given to subject frequency in quality scoring
+  similarity_weight: 0.7             # Weight given to vector similarity in quality scoring
+  auto_remediate: true               # Automatically apply high-confidence improvements
+  confidence_threshold: 0.80         # Confidence threshold for automatic remediation
+
+# Subject Imputation Configuration  
+subject_imputation:
+  enabled: true                      # Enable automatic subject imputation for missing values
+  similarity_threshold: 0.65         # Minimum composite similarity to use for imputation candidates
+  confidence_threshold: 0.70         # Confidence threshold for applying imputed subjects
+  min_candidates: 3                  # Minimum number of candidate subjects required for imputation
+  max_candidates: 150                # Maximum candidate composites to consider
+  frequency_weight: 0.3              # Weight given to subject frequency in imputation scoring
+  centroid_weight: 0.7               # Weight given to centroid similarity in imputation scoring
+  use_caching: true                  # Enable caching of imputation results for performance
+  cache_size_limit: 10000            # Maximum number of cached imputation results
+
+# Mistral Classifier Configuration
+mistral_classifier:
+  enabled: true                     # Set to true to use Mistral instead of SetFit
+  model_id: "ft:classifier:ministral-3b-latest:2bec22ef:20250702:a2707cf5"  # Fine-tuned model ID
+  api_key_env: "MISTRAL_API_KEY"     # Environment variable for API key
+  batch_size: 50                     # Number of texts to process in a single batch
+  rate_limit_delay: 0.1              # Delay between API calls in seconds
+  confidence_threshold: 0.5          # Minimum confidence threshold for predictions
+  max_retries: 3                     # Maximum number of retries for failed API calls
+  retry_delay: 1.0                   # Initial delay between retries (exponential backoff)
+
+# Feature Selection Configuration
+feature_selection:
+  enabled: false                       # Set to true to enable feature selection analysis
+  method: "rfe"                        # Feature selection method (currently only 'rfe' supported)
+  use_precomputed_results: false       # Use pre-computed RFE results if available
+  rfe_config:
+    min_features_to_select: 1          # Minimum number of features to keep
+    step: 1                            # Number of features to remove at each iteration
+    scoring_metric: "recall"        # Metric to optimize: precision, recall, f1, accuracy
+    cv_folds: 5                        # Number of cross-validation folds
+    verbose: true                      # Enable verbose output during RFE
+    save_results: true                 # Save results to file
+    results_path: "data/output/rfe_results.json"  # Path to save RFE results
+
+# ========================================================================
+# FEATURE OPTIMIZATION VALIDATION SYSTEM CONFIGURATION
+# ========================================================================
+# Comprehensive validation framework for systematic feature optimization
+validation:
+  # Core validation settings
+  enabled: true                           # Enable validation framework
+  cv_folds: 5                            # Cross-validation folds for robust evaluation
+  random_seed: 42                        # Random seed for reproducibility
+  
+  # Search strategy configuration
+  search_strategy: "greedy_forward"      # Options: exhaustive, greedy_forward, greedy_backward, random_search, stepwise, rfe_guided
+  max_features_to_test: 15               # Maximum number of features to test (computational limit)
+  max_combinations: 1000                 # Maximum feature combinations to evaluate
+  
+  # Statistical significance testing
+  significance_level: 0.05               # Alpha level for statistical significance (p < 0.05)
+  min_effect_size: 0.01                  # Minimum effect size to consider meaningful (1% improvement)
+  min_improvement_threshold: 0.01        # Minimum improvement to consider significant
+  
+  # Bootstrap confidence intervals
+  bootstrap_samples: 1000                # Number of bootstrap samples for CI estimation
+  confidence_level: 0.95                 # Confidence level for intervals (95%)
+  
+  # Feature interaction analysis
+  interaction_threshold: 0.1             # Threshold for significant feature interactions
+  analyze_interactions: true             # Enable pairwise feature interaction analysis
+  max_interaction_pairs: 50              # Maximum feature pairs to analyze for interactions
+  
+  # Redundancy detection
+  redundancy_threshold: 0.8              # Correlation threshold for redundancy detection (80%)
+  detect_redundancy: true                # Enable automatic redundancy detection
+  hierarchical_clustering: true          # Use hierarchical clustering for redundancy groups
+  
+  # Performance optimization
+  parallel_execution: false              # Enable parallel execution of validation tests
+  max_workers: 4                         # Maximum parallel workers (when enabled)
+  cache_results: true                    # Cache feature combination results for efficiency
+  
+  # Output and reporting
+  output_dir: "data/output/validation"   # Directory for validation outputs
+  generate_html_reports: true            # Generate HTML reports for easy viewing
+  generate_visualizations: true          # Create performance visualization plots
+  save_detailed_results: true            # Save comprehensive JSON results
+  
+  # Advanced metrics collection
+  advanced_metrics:
+    enabled: true                        # Enable advanced metrics beyond precision/recall/F1/AUC
+    collect_learning_curves: true        # Analyze learning curve characteristics
+    analyze_feature_stability: true      # Assess feature importance stability across CV folds
+    calculate_calibration_metrics: true  # Include calibration error and Brier score
+    threshold_analysis: true             # Analyze performance across decision thresholds
+    
+  # Automated feature testing
+  automated_testing:
+    enabled: true                        # Enable comprehensive automated feature testing
+    test_individual_contributions: true  # Test each feature individually
+    test_marginal_contributions: true    # Test marginal contribution when added to baseline
+    test_removal_impact: true            # Test impact when features are removed
+    analyze_feature_hierarchy: true      # Create feature importance hierarchy
+    
+  # Comparison and A/B testing
+  comparison_testing:
+    enabled: true                        # Enable detailed configuration comparisons
+    multiple_statistical_tests: true     # Run multiple statistical tests for robustness
+    effect_size_analysis: true           # Calculate and report effect sizes
+    risk_assessment: true                # Assess risks of adopting new configurations
+    
+  # Performance targets and thresholds
+  performance_targets:
+    target_metric: "f1"                  # Primary metric to optimize
+    minimum_f1: 0.90                     # Minimum acceptable F1-score
+    minimum_precision: 0.95              # Minimum acceptable precision
+    minimum_recall: 0.85                 # Minimum acceptable recall
+    maximum_training_time: 300           # Maximum acceptable training time (seconds)
+    
+  # Validation workflow configuration
+  workflow:
+    run_baseline_first: true             # Always establish baseline before optimization
+    compare_to_baseline: true            # Compare all results to baseline performance
+    validate_stability: true             # Validate performance stability across runs
+    generate_recommendations: true       # Generate actionable recommendations
+    
+  # Expert system rules for recommendations
+  recommendation_rules:
+    strong_improvement_threshold: 0.02   # F1 improvement for "strong" recommendation
+    moderate_improvement_threshold: 0.01 # F1 improvement for "moderate" recommendation
+    feature_count_penalty: 0.001        # Penalty per additional feature for complexity
+    stability_requirement: 0.8          # Minimum stability score for deployment recommendation
+    
+  # Monitoring and alerting
+  monitoring:
+    performance_degradation_alert: 0.05  # Alert if performance drops by 5%
+    feature_instability_alert: 0.3      # Alert if feature stability drops below 30%
+    computational_efficiency_alert: 2.0  # Alert if training time increases by 200%
+    
+# Feature optimization presets for common scenarios
+validation_presets:
+  # Quick validation for development
+  quick:
+    cv_folds: 3
+    max_features_to_test: 8
+    max_combinations: 50
+    bootstrap_samples: 100
+    search_strategy: "greedy_forward"
+    
+  # Thorough validation for production decisions
+  thorough:
+    cv_folds: 10
+    max_features_to_test: 20
+    max_combinations: 5000
+    bootstrap_samples: 10000
+    search_strategy: "stepwise"
+    
+  # Exhaustive validation for research
+  exhaustive:
+    cv_folds: 10
+    max_features_to_test: 12  # Limited due to combinatorial explosion
+    max_combinations: 10000
+    bootstrap_samples: 10000
+    search_strategy: "exhaustive"
+    
+  # Feature interaction focused
+  interaction_focused:
+    cv_folds: 5
+    max_features_to_test: 10
+    analyze_interactions: true
+    max_interaction_pairs: 100
+    search_strategy: "random_search"

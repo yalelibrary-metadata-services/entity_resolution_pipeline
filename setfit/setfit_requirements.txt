@@ -1,0 +1,9 @@
+setfit>=1.1.0
+datasets>=2.0.0
+pandas>=2.0.0
+scikit-learn>=1.0.0
+torch>=2.0.0
+transformers>=4.41.0
+sentence-transformers>=3.0.0
+accelerate>=0.20.0
+evaluate>=0.4.0

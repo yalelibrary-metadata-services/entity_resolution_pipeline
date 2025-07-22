@@ -1,0 +1,2443 @@
+{
+  "@context": {
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "foaf": "http://xmlns.com/foaf/0.1/"
+  },
+  "@id": "http://example.org/entityresolution/conceptscheme",
+  "@type": "skos:ConceptScheme",
+  "dc:title": "Entity Resolution Classification Scheme",
+  "dc:description": "Taxonomy of fields of activity for categorizing person entities in library catalog data.",
+  "dc:creator": "Yale University Library",
+  "dc:date": "2025-04-26",
+  "dc:language": "en",
+  "skos:hasTopConcept": [
+    {
+      "@id": "http://example.org/entityresolution/concept/arts",
+      "@type": "skos:Concept",
+      "skos:prefLabel": {
+        "@value": "Arts, Culture, and Creative Expression",
+        "@language": "en"
+      },
+      "skos:altLabel": [
+        {
+          "@value": "Creative Arts",
+          "@language": "en"
+        },
+        {
+          "@value": "Fine Arts",
+          "@language": "en"
+        },
+        {
+          "@value": "Cultural Expression",
+          "@language": "en"
+        },
+        {
+          "@value": "Aesthetic Production",
+          "@language": "en"
+        },
+        {
+          "@value": "Cultural Innovation",
+          "@language": "en"
+        },
+        {
+          "@value": "Creative Industries",
+          "@language": "en"
+        },
+        {
+          "@value": "Artistic Practice",
+          "@language": "en"
+        },
+        {
+          "@value": "Cultural Creation",
+          "@language": "en"
+        },
+        {
+          "@value": "Creative Disciplines",
+          "@language": "en"
+        }
+      ],
+      "skos:definition": {
+        "@value": "Individuals whose work shapes, interprets, or critiques the visual, auditory, literary, and performative arts. Encompasses creators, curators, critics, and documentarians across traditional, contemporary, and digital forms, highlighting the interplay between art, identity, society, and technology. Includes those working at the intersection of arts and other disciplines.",
+        "@language": "en"
+      },
+      "skos:scopeNote": {
+        "@value": "Bridges disciplines such as literature, music, visual and performing arts, design, media studies, and documentation. Includes both creators and those who interpret, curate, document, or facilitate artistic work, acknowledging the interconnectedness of artistic innovation, cultural identity, and technical disciplines. Consider this category when the person's primary contribution relates to creative expression, even when applied to other fields.",
+        "@language": "en"
+      },
+      "skos:narrower": [
+        {
+          "@id": "http://example.org/entityresolution/concept/literature",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Literature and Narrative Arts",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Literary Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Literary Creation",
+              "@language": "en"
+            },
+            {
+              "@value": "Writing",
+              "@language": "en"
+            },
+            {
+              "@value": "Creative Writing",
+              "@language": "en"
+            },
+            {
+              "@value": "Poetics",
+              "@language": "en"
+            },
+            {
+              "@value": "Storytelling",
+              "@language": "en"
+            },
+            {
+              "@value": "Prose and Poetry",
+              "@language": "en"
+            },
+            {
+              "@value": "Literary Criticism",
+              "@language": "en"
+            },
+            {
+              "@value": "Fiction Writing",
+              "@language": "en"
+            },
+            {
+              "@value": "Literary Scholarship",
+              "@language": "en"
+            },
+            {
+              "@value": "Playwriting",
+              "@language": "en"
+            },
+            {
+              "@value": "Dramaturgy",
+              "@language": "en"
+            },
+            {
+              "@value": "Screenwriting",
+              "@language": "en"
+            },
+            {
+              "@value": "Literary Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Rhetoric",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Authors, poets, playwrights, literary critics, editors, and scholars who create, interpret, analyze, or disseminate written and oral works—including fiction, poetry, drama, essays, literary criticism, and literary theory—across cultures, traditions, and media formats. Includes those who document or translate literature or develop new forms of narrative expression.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Encompasses creators and scholars of all literary forms, from classical texts to digital narratives, and those who translate, adapt, publish, critique, or preserve literary works. Also includes those who use literary techniques in non-fiction contexts such as journalism, biography, and technical writing when the emphasis is on narrative craft rather than subject matter. Aligns with LCC class P (Language and Literature) divisions.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/visualarts",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Visual Arts and Design",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Plastic Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Fine Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Graphic Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Painting and Sculpture",
+              "@language": "en"
+            },
+            {
+              "@value": "Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Art Criticism",
+              "@language": "en"
+            },
+            {
+              "@value": "Photography",
+              "@language": "en"
+            },
+            {
+              "@value": "Art History",
+              "@language": "en"
+            },
+            {
+              "@value": "Digital Art",
+              "@language": "en"
+            },
+            {
+              "@value": "Graphic Design",
+              "@language": "en"
+            },
+            {
+              "@value": "Visual Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Art Curation",
+              "@language": "en"
+            },
+            {
+              "@value": "Architecture",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Scientific Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Decorative Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Ceramics",
+              "@language": "en"
+            },
+            {
+              "@value": "Printmaking",
+              "@language": "en"
+            },
+            {
+              "@value": "Textile Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Fashion Design",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Artists, designers, photographers, architects, curators, conservators, and critics who create, document, interpret, preserve, or analyze visual forms—including painting, sculpture, photography, architecture, graphic design, and digital media. Includes those applying visual arts techniques to other disciplines such as scientific, archaeological, or medical illustration and photography, as well as those developing new visual technologies and methodologies.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers practitioners and theorists in fine arts, applied arts, design, and visual documentation. Particularly valuable for classifying individuals whose primary identity is as a visual artist, designer, or critic, even when their work crosses into other domains. This category is distinguished from Documentary and Technical Arts when the primary intent is aesthetic rather than documentary. Aligns with LCC classes N (Fine Arts), NA (Architecture), TR (Photography), and related visual aspects of other classifications.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/music",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Music, Sound, and Sonic Arts",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Musical Arts",
+              "@language": "en"
+            },
+            {
+              "@value": "Musical Composition",
+              "@language": "en"
+            },
+            {
+              "@value": "Musical Performance",
+              "@language": "en"
+            },
+            {
+              "@value": "Composition",
+              "@language": "en"
+            },
+            {
+              "@value": "Performance",
+              "@language": "en"
+            },
+            {
+              "@value": "Musicology",
+              "@language": "en"
+            },
+            {
+              "@value": "Songs",
+              "@language": "en"
+            },
+            {
+              "@value": "Conducting",
+              "@language": "en"
+            },
+            {
+              "@value": "Sound Design",
+              "@language": "en"
+            },
+            {
+              "@value": "Sound Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Ethnomusicology",
+              "@language": "en"
+            },
+            {
+              "@value": "Music Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Acoustic Design",
+              "@language": "en"
+            },
+            {
+              "@value": "Orchestration",
+              "@language": "en"
+            },
+            {
+              "@value": "Vocal Music",
+              "@language": "en"
+            },
+            {
+              "@value": "Instrumental Music",
+              "@language": "en"
+            },
+            {
+              "@value": "Music History",
+              "@language": "en"
+            },
+            {
+              "@value": "Music Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Music Criticism",
+              "@language": "en"
+            },
+            {
+              "@value": "Music Therapy",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Composers, performers, conductors, musicologists, sound artists, acousticians, and music scholars who create, interpret, document, analyze, or study music and sound-based works, spanning genres, traditions, technologies, and applications. Includes those who develop music technologies, preserve sonic heritage, or apply musical concepts to other fields such as therapy, education, or scientific research.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Encompasses creators and analysts of music across all traditions, from classical to contemporary, as well as those working in sound art, ethnomusicology, music technology, acoustic engineering, sound preservation, and therapeutic applications of sound. Consider both a person's relationship to musical creation and their technical contribution to sound as a medium. Aligns with LCC class M (Music and Books on Music) and acoustic aspects of classes in science and technology.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/performingarts",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Performing Arts and Media",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Theater",
+              "@language": "en"
+            },
+            {
+              "@value": "Dance",
+              "@language": "en"
+            },
+            {
+              "@value": "Film and Cinema",
+              "@language": "en"
+            },
+            {
+              "@value": "Theater and Drama",
+              "@language": "en"
+            },
+            {
+              "@value": "Dance and Movement",
+              "@language": "en"
+            },
+            {
+              "@value": "Film and Digital Performance",
+              "@language": "en"
+            },
+            {
+              "@value": "Acting",
+              "@language": "en"
+            },
+            {
+              "@value": "Directing",
+              "@language": "en"
+            },
+            {
+              "@value": "Choreography",
+              "@language": "en"
+            },
+            {
+              "@value": "Cinematography",
+              "@language": "en"
+            },
+            {
+              "@value": "Broadcasting",
+              "@language": "en"
+            },
+            {
+              "@value": "Performance Art",
+              "@language": "en"
+            },
+            {
+              "@value": "Television",
+              "@language": "en"
+            },
+            {
+              "@value": "Radio",
+              "@language": "en"
+            },
+            {
+              "@value": "Digital Media",
+              "@language": "en"
+            },
+            {
+              "@value": "Theatrical Production",
+              "@language": "en"
+            },
+            {
+              "@value": "Stage Direction",
+              "@language": "en"
+            },
+            {
+              "@value": "Stage Design",
+              "@language": "en"
+            },
+            {
+              "@value": "Costume Design",
+              "@language": "en"
+            },
+            {
+              "@value": "Film Production",
+              "@language": "en"
+            },
+            {
+              "@value": "Animation",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Actors, directors, dancers, choreographers, filmmakers, broadcasters, performance artists, and media scholars who create, perform, direct, produce, document, or analyze works presented through live, recorded, or digital performance—including theater, dance, film, television, radio, and interactive media. Includes those developing new performance technologies and methodologies, as well as those preserving and studying performance traditions across cultures.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Spans traditional and experimental forms of performance and media, including interdisciplinary and hybrid practices that combine performance with other artistic, technological, or scholarly approaches. For documentary work that captures performance or cultural practices, consider both the performance and documentation aspects. This category is distinct from Music in its emphasis on visual, embodied, or dramatic performance rather than primarily sonic arts. Aligns with elements of LCC classes PN-PT (Literature), as well as aspects of TR (Photography) and TK (Electrical engineering/Broadcasting).",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/documentationarts",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Documentary and Technical Arts",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Documentary Photography",
+              "@language": "en"
+            },
+            {
+              "@value": "Scientific Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Archaeological Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Photography",
+              "@language": "en"
+            },
+            {
+              "@value": "Visual Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Research Photography",
+              "@language": "en"
+            },
+            {
+              "@value": "Scientific Photography",
+              "@language": "en"
+            },
+            {
+              "@value": "Architectural Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Visual Anthropology",
+              "@language": "en"
+            },
+            {
+              "@value": "Botanical Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Zoological Illustration",
+              "@language": "en"
+            },
+            {
+              "@value": "Documentary Filmmaking",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Field Recording",
+              "@language": "en"
+            },
+            {
+              "@value": "Heritage Documentation",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Photographers, illustrators, filmmakers, and technical artists who apply visual and media arts techniques primarily to document, record, or visualize subjects for scientific, historical, archaeological, medical, or other scholarly purposes. Includes those who develop specialized visual documentation methodologies and technologies that bridge artistic practice with other disciplines, as well as those who use documentary techniques to preserve cultural heritage or scientific knowledge.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "This category addresses the interdisciplinary area where creative and technical visual practices serve documentary, research, or scholarly purposes. It includes individuals whose primary contribution is the visual documentation or illustration of subjects in fields such as archaeology, science, medicine, or natural history. Key distinguishing factors include: (1) intent (documentary versus aesthetic), (2) methodological approach (technical precision versus artistic expression), and (3) institutional context (academic, scientific, cultural heritage versus arts). Bridges LCC classes TR (Photography), NC (Drawing/Illustration), and various scientific and technical classes.",
+            "@language": "en"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "http://example.org/entityresolution/concept/science",
+      "@type": "skos:Concept",
+      "skos:prefLabel": {
+        "@value": "Sciences, Research, and Discovery",
+        "@language": "en"
+      },
+      "skos:altLabel": [
+        {
+          "@value": "Scientific Inquiry",
+          "@language": "en"
+        },
+        {
+          "@value": "Scientific Investigation",
+          "@language": "en"
+        },
+        {
+          "@value": "Natural Sciences",
+          "@language": "en"
+        },
+        {
+          "@value": "Natural and Physical Sciences",
+          "@language": "en"
+        },
+        {
+          "@value": "Empirical Research",
+          "@language": "en"
+        },
+        {
+          "@value": "Scientific Methodology",
+          "@language": "en"
+        },
+        {
+          "@value": "Scientific Discovery",
+          "@language": "en"
+        },
+        {
+          "@value": "STEM Fields",
+          "@language": "en"
+        },
+        {
+          "@value": "Experimental Sciences",
+          "@language": "en"
+        }
+      ],
+      "skos:definition": {
+        "@value": "Researchers, theorists, experimentalists, and practitioners who advance knowledge of the natural and physical world through observation, experimentation, measurement, modeling, and theoretical analysis. Encompasses pure and applied sciences, medicine, technology, mathematics, and interdisciplinary scientific approaches aimed at understanding natural phenomena or developing practical applications.",
+        "@language": "en"
+      },
+      "skos:scopeNote": {
+        "@value": "Covers all branches of scientific inquiry, from fundamental research to technological innovation and practical applications, including interdisciplinary and emerging fields that use scientific methodology. For individuals working at the intersection of science and other domains (e.g., archaeology, documentation, medicine), consider their primary professional identity and methodological approach, while acknowledging interdisciplinary contributions. Aligns broadly with LCC classes Q-T, with extensions to scientific aspects of other classes.",
+        "@language": "en"
+      },
+      "skos:narrower": [
+        {
+          "@id": "http://example.org/entityresolution/concept/naturalsciences",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Natural Sciences",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Physical Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Biological Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Earth Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Physics",
+              "@language": "en"
+            },
+            {
+              "@value": "Chemistry",
+              "@language": "en"
+            },
+            {
+              "@value": "Biology",
+              "@language": "en"
+            },
+            {
+              "@value": "Astronomy",
+              "@language": "en"
+            },
+            {
+              "@value": "Geology",
+              "@language": "en"
+            },
+            {
+              "@value": "Zoology",
+              "@language": "en"
+            },
+            {
+              "@value": "Botany",
+              "@language": "en"
+            },
+            {
+              "@value": "Ecology",
+              "@language": "en"
+            },
+            {
+              "@value": "Experimental Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Paleontology",
+              "@language": "en"
+            },
+            {
+              "@value": "Molecular Biology",
+              "@language": "en"
+            },
+            {
+              "@value": "Oceanography",
+              "@language": "en"
+            },
+            {
+              "@value": "Meteorology",
+              "@language": "en"
+            },
+            {
+              "@value": "Evolutionary Biology",
+              "@language": "en"
+            },
+            {
+              "@value": "Microbiology",
+              "@language": "en"
+            },
+            {
+              "@value": "Natural History",
+              "@language": "en"
+            },
+            {
+              "@value": "Theoretical Physics",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Scientists who study the physical, chemical, biological, and earth systems of the natural world, including physics, chemistry, biology, geology, astronomy, ecology, and their subdisciplines. Encompasses those developing theoretical frameworks, conducting experiments, performing field observations, creating models, or developing instrumental techniques to advance understanding of natural phenomena across scales from subatomic particles to cosmic structures.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes both experimental and theoretical approaches to understanding natural phenomena, as well as interdisciplinary research across scientific domains. When classifying natural scientists who work at the intersection with applied fields (medicine, agriculture, engineering), consider their primary methodological approach and the fundamental versus applied nature of their contributions. For natural historians who primarily document and classify rather than analyze mechanisms, consider whether their work aligns more closely with this category or with Cultural and Area Studies. Corresponds closely to LCC class Q subdivisions including QA-QR (except QA for Mathematics, which has its own category).",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/mathematics",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Mathematics and Quantitative Sciences",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Mathematical Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Pure Mathematics",
+              "@language": "en"
+            },
+            {
+              "@value": "Applied Mathematics",
+              "@language": "en"
+            },
+            {
+              "@value": "Statistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Computational Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Mathematical Modeling",
+              "@language": "en"
+            },
+            {
+              "@value": "Quantitative Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Statistical Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Mathematical Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Computational Mathematics",
+              "@language": "en"
+            },
+            {
+              "@value": "Geometry",
+              "@language": "en"
+            },
+            {
+              "@value": "Algebra",
+              "@language": "en"
+            },
+            {
+              "@value": "Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Number Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Probability Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Operations Research",
+              "@language": "en"
+            },
+            {
+              "@value": "Mathematical Physics",
+              "@language": "en"
+            },
+            {
+              "@value": "Mathematical Logic",
+              "@language": "en"
+            },
+            {
+              "@value": "Numerical Analysis",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Mathematicians, statisticians, quantitative analysts, and computational scientists who develop and apply mathematical models, theories, algorithms, and methods to understand patterns, structures, relationships, and data. Includes those working in pure theory, applied mathematical fields, statistical analysis, and the development of mathematical tools for other disciplines such as physics, economics, computer science, or social sciences.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers pure and applied mathematics, statistics, computational science, mathematical modeling, and quantitative research in interdisciplinary contexts. When classifying individuals working at the intersection of mathematics with other fields, consider the theoretical depth and mathematical originality of their work versus the application of established mathematical techniques within another discipline. This category includes those who advance mathematical knowledge itself, while those who primarily apply mathematics within another field may be classified according to that field. Corresponds primarily to LCC class QA (Mathematics) and statistical aspects of other classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/medicine",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Medicine, Health, and Clinical Sciences",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Medical Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Healthcare",
+              "@language": "en"
+            },
+            {
+              "@value": "Clinical Medicine",
+              "@language": "en"
+            },
+            {
+              "@value": "Public Health",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Research",
+              "@language": "en"
+            },
+            {
+              "@value": "Pathology",
+              "@language": "en"
+            },
+            {
+              "@value": "Nursing",
+              "@language": "en"
+            },
+            {
+              "@value": "Surgery",
+              "@language": "en"
+            },
+            {
+              "@value": "Pharmacy",
+              "@language": "en"
+            },
+            {
+              "@value": "Psychology",
+              "@language": "en"
+            },
+            {
+              "@value": "Psychiatry",
+              "@language": "en"
+            },
+            {
+              "@value": "Epidemiology",
+              "@language": "en"
+            },
+            {
+              "@value": "Veterinary Medicine",
+              "@language": "en"
+            },
+            {
+              "@value": "Biomedical Research",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Practice",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Alternative Medicine",
+              "@language": "en"
+            },
+            {
+              "@value": "Traditional Medicine",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Anthropology",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Ethics",
+              "@language": "en"
+            },
+            {
+              "@value": "Medical Technology",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Physicians, clinicians, medical researchers, public health professionals, and healthcare practitioners who study, prevent, diagnose, treat, or research conditions affecting human or animal health. Includes those advancing biomedical knowledge, developing medical technologies and therapeutics, establishing clinical practices, designing healthcare systems, implementing public health measures, or preserving traditional healing knowledge across cultural contexts.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Encompasses all aspects of medicine, health sciences, and public health, including traditional, complementary, and alternative approaches to healthcare. When classifying individuals at the intersection of medicine with other domains, consider whether their primary contribution relates to health knowledge and practice (this category) or to another field that applies to health contexts. Practitioners, researchers, and theorists of healthcare systems are included here, while those documenting medical practices or creating medical illustrations may be classified under Documentary and Technical Arts if that represents their primary professional identity. Corresponds to LCC class R and its subdivisions, with connections to classes QM-QP (Human anatomy and physiology).",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/appliedsciences",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Applied Sciences, Technology, and Engineering",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Technology",
+              "@language": "en"
+            },
+            {
+              "@value": "Invention",
+              "@language": "en"
+            },
+            {
+              "@value": "Technological Innovation",
+              "@language": "en"
+            },
+            {
+              "@value": "Civil Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Mechanical Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Electrical Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Chemical Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Computer Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Information Technology",
+              "@language": "en"
+            },
+            {
+              "@value": "Materials Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Systems Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Innovation",
+              "@language": "en"
+            },
+            {
+              "@value": "Aeronautical Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Biomedical Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Industrial Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Software Development",
+              "@language": "en"
+            },
+            {
+              "@value": "Artificial Intelligence",
+              "@language": "en"
+            },
+            {
+              "@value": "Robotics",
+              "@language": "en"
+            },
+            {
+              "@value": "Technical Design",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Engineers, technologists, inventors, computer scientists, and technical innovators who apply scientific principles, mathematical methods, and technical knowledge to develop technologies, solve practical problems, design systems, and create new tools, processes, and infrastructure. Includes those developing computational approaches, materials, devices, structures, or systems that address specific human needs or advance technological capabilities.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Spans all branches of engineering, applied sciences, computer science, information technology, and technical innovation, including interdisciplinary and emerging fields. When classifying individuals at the intersection of engineering with other domains, consider whether their primary contribution relates to the technical design, development, or implementation of solutions (this category) or to the scientific understanding that underlies technology. Distinguish between engineers and architects based on whether their primary focus is technical functionality (this category) or aesthetic and spatial design (Visual Arts and Design). Corresponds primarily to LCC class T and its subdivisions, with connections to applied aspects of science classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/agriculture",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Agriculture, Environment, and Sustainability",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Farming",
+              "@language": "en"
+            },
+            {
+              "@value": "Horticulture",
+              "@language": "en"
+            },
+            {
+              "@value": "Ecology",
+              "@language": "en"
+            },
+            {
+              "@value": "Farming and Food Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Horticulture and Forestry",
+              "@language": "en"
+            },
+            {
+              "@value": "Environmental Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Agronomy",
+              "@language": "en"
+            },
+            {
+              "@value": "Forestry",
+              "@language": "en"
+            },
+            {
+              "@value": "Fisheries",
+              "@language": "en"
+            },
+            {
+              "@value": "Sustainable Development",
+              "@language": "en"
+            },
+            {
+              "@value": "Conservation",
+              "@language": "en"
+            },
+            {
+              "@value": "Environmental Management",
+              "@language": "en"
+            },
+            {
+              "@value": "Animal Husbandry",
+              "@language": "en"
+            },
+            {
+              "@value": "Agricultural Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Soil Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Plant Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Wildlife Management",
+              "@language": "en"
+            },
+            {
+              "@value": "Agroecology",
+              "@language": "en"
+            },
+            {
+              "@value": "Environmental Protection",
+              "@language": "en"
+            },
+            {
+              "@value": "Climate Science",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Agriculturalists, environmental scientists, ecologists, conservationists, and sustainability practitioners who study, develop, implement, or advocate for methods and systems for cultivating plants, raising animals, managing natural resources, protecting ecosystems, and developing sustainable practices. Includes those working at the intersection of biological sciences, land management, food systems, environmental protection, and climate adaptation.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes research and practice in agriculture, ecology, environmental management, conservation, and sustainable development. When classifying individuals at the intersection of environmental studies with advocacy, consider whether their primary contribution relates to scientific research and technical solutions (this category) or to policy change and social mobilization (Social Reform, Advocacy, and Activism). For those working with indigenous and traditional ecological knowledge, consider whether their approach emphasizes scientific validation and technical application or cultural preservation and transmission. Corresponds primarily to LCC class S and its subdivisions, with connections to environmental aspects of other sciences.",
+            "@language": "en"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "http://example.org/entityresolution/concept/humanities",
+      "@type": "skos:Concept",
+      "skos:prefLabel": {
+        "@value": "Humanities, Thought, and Interpretation",
+        "@language": "en"
+      },
+      "skos:altLabel": [
+        {
+          "@value": "Human Studies",
+          "@language": "en"
+        },
+        {
+          "@value": "Liberal Arts",
+          "@language": "en"
+        },
+        {
+          "@value": "Philosophy and Thought",
+          "@language": "en"
+        },
+        {
+          "@value": "Intellectual History",
+          "@language": "en"
+        },
+        {
+          "@value": "Critical Studies",
+          "@language": "en"
+        },
+        {
+          "@value": "Philosophy and Culture",
+          "@language": "en"
+        },
+        {
+          "@value": "Hermeneutics",
+          "@language": "en"
+        },
+        {
+          "@value": "Textual Analysis",
+          "@language": "en"
+        },
+        {
+          "@value": "Cultural Interpretation",
+          "@language": "en"
+        },
+        {
+          "@value": "Historical Research",
+          "@language": "en"
+        }
+      ],
+      "skos:definition": {
+        "@value": "Scholars, thinkers, critics, and researchers who examine, interpret, analyze, and preserve human experience, culture, history, language, thought, and cultural artifacts through critical, theoretical, philosophical, textual, or archaeological approaches. Includes those who study, interpret, or preserve cultural heritage, historical records, languages, philosophical traditions, and material culture across time and geographic contexts.",
+        "@language": "en"
+      },
+      "skos:scopeNote": {
+        "@value": "Encompasses disciplines concerned with meaning, interpretation, cultural context, historical understanding, and value systems, often using qualitative, hermeneutic, or archival methods. For interdisciplinary work that bridges humanities with sciences, arts, or social studies, consider the primary methodological approach and intellectual tradition informing the individual's work. Corresponds broadly to LCC classes B-F and P, as well as aspects of other classes focused on historical or cultural dimensions.",
+        "@language": "en"
+      },
+      "skos:narrower": [
+        {
+          "@id": "http://example.org/entityresolution/concept/philosophy",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Philosophy and Ethics",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Philosophical Thought",
+              "@language": "en"
+            },
+            {
+              "@value": "Metaphysics",
+              "@language": "en"
+            },
+            {
+              "@value": "Moral Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Logic",
+              "@language": "en"
+            },
+            {
+              "@value": "Epistemology",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophical Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophical Traditions",
+              "@language": "en"
+            },
+            {
+              "@value": "Applied Ethics",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophy of Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophy of Mind",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Aesthetics",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophy of Religion",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophy of Language",
+              "@language": "en"
+            },
+            {
+              "@value": "Critical Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Phenomenology",
+              "@language": "en"
+            },
+            {
+              "@value": "Existentialism",
+              "@language": "en"
+            },
+            {
+              "@value": "Analytic Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Continental Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Philosophy of History",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Philosophers, ethicists, logicians, and philosophical scholars who examine fundamental questions about existence, knowledge, values, reason, mind, language, and ethical systems through conceptual analysis, logical argumentation, and theoretical frameworks. Includes those developing philosophical systems, critiquing existing thought, applying philosophical methods to specific domains (science, art, politics), or engaging with philosophical traditions across cultures and historical periods.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes all branches of philosophy and ethics, from metaphysics to applied ethics. When classifying individuals at the intersection of philosophy with other domains, consider whether their primary contribution involves conceptual analysis and development of theoretical frameworks (this category) or application of established philosophical principles within another domain. For those working with religious philosophical traditions, consider whether their approach emphasizes philosophical reasoning and critique (this category) or theological interpretation and spiritual practice (Religion, Theology, and Spirituality). Corresponds to LCC class B-BD and BH-BJ, with philosophical aspects potentially appearing in other classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/religion",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Religion, Theology, and Spirituality",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Religious Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Spiritual Traditions",
+              "@language": "en"
+            },
+            {
+              "@value": "Sacred Texts",
+              "@language": "en"
+            },
+            {
+              "@value": "Theological Thought",
+              "@language": "en"
+            },
+            {
+              "@value": "Comparative Religion",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious History",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious Leadership",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious Practice",
+              "@language": "en"
+            },
+            {
+              "@value": "Mysticism",
+              "@language": "en"
+            },
+            {
+              "@value": "Biblical Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Divinity",
+              "@language": "en"
+            },
+            {
+              "@value": "Exegesis",
+              "@language": "en"
+            },
+            {
+              "@value": "Church History",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious Institutions",
+              "@language": "en"
+            },
+            {
+              "@value": "Pastoral Care",
+              "@language": "en"
+            },
+            {
+              "@value": "Liturgical Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Canon Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Religious Orders",
+              "@language": "en"
+            },
+            {
+              "@value": "Monasticism",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Theologians, religious leaders, clergy, scholars of religion, and spiritual practitioners who study, interpret, practice, teach, or lead within religious and spiritual traditions, theological systems, faith communities, or sacred textual traditions. Includes those analyzing religious phenomena academically, leading religious institutions or communities, developing theological frameworks, preserving religious traditions, or establishing new spiritual approaches.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers comparative religion, theology, spirituality, sacred texts, religious history, and the intersection of religion with society and culture across world traditions. When classifying individuals at the intersection of religion with other domains, consider the religious or spiritual dimension as primary when their work explicitly engages with transcendent meaning, divine revelation, or spiritual experience, even when they also employ methods from other fields. For religious philosophers, the distinction may depend on whether their work engages primarily with faith traditions and theological systems (this category) or with philosophical argumentation independent of religious authority (Philosophy and Ethics). Corresponds to LCC classes BL-BX, with religious dimensions potentially appearing in historical, philosophical, and cultural classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/history",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "History, Heritage, and Memory",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Historiography",
+              "@language": "en"
+            },
+            {
+              "@value": "Historical Research",
+              "@language": "en"
+            },
+            {
+              "@value": "Archaeology",
+              "@language": "en"
+            },
+            {
+              "@value": "Archives",
+              "@language": "en"
+            },
+            {
+              "@value": "Cultural Heritage",
+              "@language": "en"
+            },
+            {
+              "@value": "Public History",
+              "@language": "en"
+            },
+            {
+              "@value": "Preservation",
+              "@language": "en"
+            },
+            {
+              "@value": "Memory Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Historical Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Archival Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Archaeological Investigation",
+              "@language": "en"
+            },
+            {
+              "@value": "Historical Interpretation",
+              "@language": "en"
+            },
+            {
+              "@value": "Ancient History",
+              "@language": "en"
+            },
+            {
+              "@value": "Medieval History",
+              "@language": "en"
+            },
+            {
+              "@value": "Modern History",
+              "@language": "en"
+            },
+            {
+              "@value": "Art History",
+              "@language": "en"
+            },
+            {
+              "@value": "Intellectual History",
+              "@language": "en"
+            },
+            {
+              "@value": "Social History",
+              "@language": "en"
+            },
+            {
+              "@value": "Economic History",
+              "@language": "en"
+            },
+            {
+              "@value": "Political History",
+              "@language": "en"
+            },
+            {
+              "@value": "Oral History",
+              "@language": "en"
+            },
+            {
+              "@value": "Museum Studies",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Historians, archaeologists, archivists, preservationists, and memory scholars who study, document, excavate, preserve, analyze, or interpret past events, societies, cultures, and material remains through critical examination of sources, contexts, and artifacts. Includes those developing historical methodologies, managing historical records, conducting archaeological investigations, preserving cultural heritage, establishing museum collections, or studying collective memory processes.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes research in history, archaeology, archival science, heritage studies, and the preservation and interpretation of the past across all periods and regions. When classifying individuals at the intersection of history with other domains, consider whether their primary contribution involves uncovering, interpreting, or preserving evidence of past events and cultures (this category) or applying historical context within another discipline. For archaeological photographers or illustrators, classification may depend on whether their primary identity relates to documentation methodology (Documentary and Technical Arts) or archaeological interpretation and knowledge (this category). Corresponds primarily to LCC classes C-F, Z (archives), with historical dimensions appearing throughout other classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/linguistics",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Language, Linguistics, and Communication",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Philology",
+              "@language": "en"
+            },
+            {
+              "@value": "Language Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Linguistic Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Applied Linguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Theoretical Linguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Sociolinguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Psycholinguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Translation Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Computational Linguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Historical Linguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Language Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Communication Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Grammar",
+              "@language": "en"
+            },
+            {
+              "@value": "Lexicography",
+              "@language": "en"
+            },
+            {
+              "@value": "Semantics",
+              "@language": "en"
+            },
+            {
+              "@value": "Phonology",
+              "@language": "en"
+            },
+            {
+              "@value": "Syntax",
+              "@language": "en"
+            },
+            {
+              "@value": "Discourse Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Sign Language Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Applied Communication",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Linguists, philologists, translators, language scholars, and communication theorists who study, analyze, document, preserve, translate, teach, or develop computational approaches to language structure, function, use, development, and variation. Includes those studying language in social, cognitive, historical, or computational contexts, documenting endangered languages, developing language technologies, or analyzing communication systems across cultures and modalities.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers all aspects of language and communication, including theoretical, historical, applied, sociolinguistic, and computational approaches. When classifying individuals at the intersection of linguistics with other domains, consider whether their primary contribution involves the study of language systems and structures (this category) or the application of linguistic knowledge within another field. For literary translators, the classification may depend on whether their work emphasizes linguistic mediation (this category) or literary creation (Literature and Narrative Arts). For communication theorists, consider whether their focus is on language and discourse systems (this category) or on media systems and information dissemination (Media, Journalism, and Communication). Corresponds primarily to LCC class P and its subdivisions, with linguistic dimensions appearing in communication-related aspects of other classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/culturalstudies",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Cultural Studies, Area Studies, and Social Sciences",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Anthropology",
+              "@language": "en"
+            },
+            {
+              "@value": "Ethnography",
+              "@language": "en"
+            },
+            {
+              "@value": "Regional Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Cultural Anthropology",
+              "@language": "en"
+            },
+            {
+              "@value": "Ethnology",
+              "@language": "en"
+            },
+            {
+              "@value": "Area Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Cultural Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Cross-Cultural Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Anthropology",
+              "@language": "en"
+            },
+            {
+              "@value": "Folklore Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Cultural Documentation",
+              "@language": "en"
+            },
+            {
+              "@value": "Material Culture",
+              "@language": "en"
+            },
+            {
+              "@value": "Ethnic Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Indigenous Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Gender Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Queer Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Postcolonial Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "African Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Asian Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Latin American Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Middle Eastern Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "European Studies",
+              "@language": "en"
+            },            
+            {
+              "@value": "Sociology",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Research",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Structures",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Psychology",
+              "@language": "en"
+            },
+            {
+              "@value": "Sociolinguistics",
+              "@language": "en"
+            },
+            {
+              "@value": "Demographic Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Urban Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Rural Sociology",
+              "@language": "en"
+            },
+            {
+              "@value": "Community Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Demography",
+              "@language": "en"
+            },
+            {
+              "@value": "Population Studies",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Sociologists, anthropologists, ethnographers, area specialists, cultural studies scholars, and social scientists who study, document, analyze, interpret, or compare human societies, cultural practices, social groups, social structures, material cultures, belief systems, and geographic regions through interdisciplinary approaches. Includes those conducting sociological research on social structures and institutions, ethnographic fieldwork on cultural practices, analyzing social and cultural phenomena, documenting traditional practices and folklore, studying demographic patterns and social change, preserving intangible cultural heritage, or developing theoretical frameworks for understanding social and cultural dynamics.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes research in sociology, cultural studies, social and cultural anthropology, ethnography, folklore studies, area studies, social psychology, demography, and regional studies, with attention to diversity and global perspectives. When classifying individuals at the intersection of social sciences with other domains, consider whether their primary contribution involves understanding social structures, cultural systems, and social processes (this category) or applying sociocultural knowledge within another field. For sociologists, the classification may depend on whether their work emphasizes broader social structures and institutions (this category) or more specialized aspects like economic systems (Economics, Business, and Finance) or political structures (Politics, Policy, and Government). For ethnomusicologists, classification may depend on whether their work emphasizes cultural context and social meaning (this category) or musical structures and performances (Music, Sound, and Sonic Arts). For those documenting social or cultural practices visually, consider whether their primary identity relates to social or cultural analysis (this category) or documentation methodology (Documentary and Technical Arts). Corresponds primarily to LCC classes GN (Anthropology), GR (Folklore), GT (Manners and customs), and HM-HX (Sociology), as well as cultural and social dimensions across area-specific classes.",
+            "@language": "en"
+          }
+        }
+      ]
+    },
+    {
+      "@id": "http://example.org/entityresolution/concept/society",
+      "@type": "skos:Concept",
+      "skos:prefLabel": {
+        "@value": "Society, Governance, and Public Life",
+        "@language": "en"
+      },
+      "skos:altLabel": [
+        {
+          "@value": "Social Institutions",
+          "@language": "en"
+        },
+        {
+          "@value": "Public Affairs",
+          "@language": "en"
+        },
+        {
+          "@value": "Civic Leadership",
+          "@language": "en"
+        },
+        {
+          "@value": "Social Organization",
+          "@language": "en"
+        },
+        {
+          "@value": "Public Administration",
+          "@language": "en"
+        },
+        {
+          "@value": "Civil Society",
+          "@language": "en"
+        },
+        {
+          "@value": "Political Systems",
+          "@language": "en"
+        },
+        {
+          "@value": "Social Policy",
+          "@language": "en"
+        },
+        {
+          "@value": "Public Leadership",
+          "@language": "en"
+        }
+      ],
+      "skos:definition": {
+        "@value": "Leaders, analysts, scholars, practitioners, and advocates who engage with, study, reform, administer, or shape social institutions, political systems, economic structures, educational systems, legal frameworks, media environments, and collective action. Encompasses governance, law, economics, education, social policy, military affairs, media, and activism aimed at sustaining or transforming social systems and public institutions.",
+        "@language": "en"
+      },
+      "skos:scopeNote": {
+        "@value": "Covers fields concerned with social organization, governance, economic activity, education, communication, and collective behavior, as well as advocacy and civic engagement aimed at social change. For individuals whose work spans multiple social domains, classification should consider their primary institutional role or analytical approach, while acknowledging interconnections across social systems. Corresponds broadly to LCC classes H-L, J-K, and aspects of Z, with social dimensions appearing throughout other classes.",
+        "@language": "en"
+      },
+      "skos:narrower": [
+        {
+          "@id": "http://example.org/entityresolution/concept/politics",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Politics, Policy, and Government",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Political Leadership",
+              "@language": "en"
+            },
+            {
+              "@value": "Statecraft",
+              "@language": "en"
+            },
+            {
+              "@value": "Public Administration",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Governance",
+              "@language": "en"
+            },
+            {
+              "@value": "Public Policy",
+              "@language": "en"
+            },
+            {
+              "@value": "Diplomacy",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "International Relations",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Institutions",
+              "@language": "en"
+            },
+            {
+              "@value": "Policy Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Electoral Politics",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Economy",
+              "@language": "en"
+            },
+            {
+              "@value": "Comparative Politics",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Movements",
+              "@language": "en"
+            },
+            {
+              "@value": "Constitutional Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Geopolitics",
+              "@language": "en"
+            },
+            {
+              "@value": "Public Affairs",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Politicians, diplomats, public administrators, political scientists, policy analysts, and government officials who govern, lead, analyze, develop policy for, administer, or participate in political systems, government institutions, public policy processes, and international relations. Includes those developing political theory, implementing governance structures, representing constituencies, analyzing political phenomena, managing public resources, or negotiating international agreements.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes governance at all levels, policy analysis, political theory, diplomatic practice, and the study of political processes and institutions across systems and cultures. When classifying individuals at the intersection of politics with other domains, consider whether their primary contribution involves the structure, process, or theory of governance and political systems (this category) or the application of political knowledge within another field. For legal scholars focused on constitutional systems, the classification may depend on whether their emphasis is on political structure and governance (this category) or legal doctrine and jurisprudence (Law, Justice, and Jurisprudence). For political activists, consider whether their primary identity relates to political theory and governance (this category) or to social movement building and advocacy (Social Reform, Advocacy, and Activism). Corresponds primarily to LCC class J and its subdivisions, with political dimensions appearing in legal, historical, and economic classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/law",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Law, Justice, and Jurisprudence",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Legal Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Practice",
+              "@language": "en"
+            },
+            {
+              "@value": "Judiciary",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Comparative Law",
+              "@language": "en"
+            },
+            {
+              "@value": "International Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Scholarship",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal History",
+              "@language": "en"
+            },
+            {
+              "@value": "Justice Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Human Rights",
+              "@language": "en"
+            },
+            {
+              "@value": "Constitutional Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Criminal Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Civil Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Property Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Contract Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Administrative Law",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Legal Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Law Enforcement",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Judges, lawyers, legal scholars, legislators, legal reformers, and advocates who create, interpret, apply, analyze, reform, or study legal systems, principles, codes, cases, and justice institutions. Includes those developing legal theory, adjudicating disputes, representing clients, drafting legislation, documenting legal history, or advocating for justice reforms across different legal traditions and jurisdictions.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers all aspects of law, justice, and legal institutions, including comparative and international law, legal practice, jurisprudence, legal scholarship, and advocacy. When classifying individuals at the intersection of law with other domains, consider whether their primary contribution involves the development, interpretation, or application of legal frameworks and principles (this category) or the application of legal knowledge within another field. For legal philosophers, the classification may depend on whether their emphasis is on legal doctrine and jurisprudence (this category) or broader philosophical questions of ethics and epistemology (Philosophy and Ethics). For human rights advocates, consider whether their primary identity relates to legal frameworks and justice systems (this category) or to social movement building and systemic change (Social Reform, Advocacy, and Activism). Corresponds to LCC class K and its subdivisions, with legal dimensions appearing in constitutional, political, and historical classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/economics",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Economics, Business, and Finance",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Economic Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Commerce",
+              "@language": "en"
+            },
+            {
+              "@value": "Entrepreneurship",
+              "@language": "en"
+            },
+            {
+              "@value": "Economic Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Business Administration",
+              "@language": "en"
+            },
+            {
+              "@value": "Financial Management",
+              "@language": "en"
+            },
+            {
+              "@value": "Economic Policy",
+              "@language": "en"
+            },
+            {
+              "@value": "Development Economics",
+              "@language": "en"
+            },
+            {
+              "@value": "Labor Economics",
+              "@language": "en"
+            },
+            {
+              "@value": "Business Leadership",
+              "@language": "en"
+            },
+            {
+              "@value": "Market Analysis",
+              "@language": "en"
+            },
+            {
+              "@value": "Financial Systems",
+              "@language": "en"
+            },
+            {
+              "@value": "Macroeconomics",
+              "@language": "en"
+            },
+            {
+              "@value": "Microeconomics",
+              "@language": "en"
+            },
+            {
+              "@value": "International Trade",
+              "@language": "en"
+            },
+            {
+              "@value": "Banking",
+              "@language": "en"
+            },
+            {
+              "@value": "Monetary Policy",
+              "@language": "en"
+            },
+            {
+              "@value": "Economic History",
+              "@language": "en"
+            },
+            {
+              "@value": "Accounting",
+              "@language": "en"
+            },
+            {
+              "@value": "Marketing",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Economists, business leaders, entrepreneurs, financial analysts, economic policymakers, and scholars who study, analyze, lead, develop theory for, or participate in economic systems, business enterprises, commercial activities, and financial institutions. Includes those advancing economic theory, managing business organizations, creating economic policy, developing financial systems, founding ventures, or analyzing economic trends across local, national, and global contexts.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes micro- and macroeconomics, business administration, finance, entrepreneurship, economic history, development economics, and applied economic analysis. When classifying individuals at the intersection of economics with other domains, consider whether their primary contribution involves economic analysis, financial systems, or business organization (this category) or the application of economic knowledge within another field. For economic historians, the classification may depend on whether their emphasis is on economic systems and processes (this category) or on historical context and change over time (History, Heritage, and Memory). For sustainability-focused business leaders, consider whether their primary identity relates to business organization and market systems (this category) or to environmental management and conservation (Agriculture, Environment, and Sustainability). Corresponds primarily to LCC classes HB-HJ, with economic dimensions appearing in policy, historical, and social classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/education",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Education, Pedagogy, and Learning",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Teaching",
+              "@language": "en"
+            },
+            {
+              "@value": "Learning",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Teaching and Instruction",
+              "@language": "en"
+            },
+            {
+              "@value": "Learning Sciences",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Leadership",
+              "@language": "en"
+            },
+            {
+              "@value": "Curriculum Development",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Psychology",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Policy",
+              "@language": "en"
+            },
+            {
+              "@value": "Adult Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Higher Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Philosophy",
+              "@language": "en"
+            },
+            {
+              "@value": "Primary Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Secondary Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Special Education",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Technology",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Administration",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Assessment",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational History",
+              "@language": "en"
+            },
+            {
+              "@value": "Educational Research",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Educators, teachers, professors, educational researchers, learning theorists, educational administrators, and curriculum developers who teach, lead, study, reform, develop theory for, or contribute to educational institutions, pedagogical methods, learning processes, and educational systems. Includes those developing educational approaches, managing educational institutions, researching learning sciences, creating educational policy, or preserving and transmitting knowledge across formal and informal contexts.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers all levels and forms of education, including formal, informal, and lifelong learning, educational theory, policy, administration, and research. When classifying individuals at the intersection of education with other domains, consider whether their primary contribution involves teaching methodology, learning theory, or educational systems (this category) or subject matter expertise applied in educational contexts. For academic subject specialists, the classification may depend on whether their principal identity relates to pedagogical innovation and educational practice (this category) or to advancement of knowledge within their discipline. For educational reformers, consider whether their primary identity relates to educational theory and practice (this category) or to social movement building and structural change (Social Reform, Advocacy, and Activism). Corresponds to LCC class L and its subdivisions, with educational dimensions appearing throughout other disciplinary classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/military",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Military, Security, and Defense",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Armed Forces",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Strategy",
+              "@language": "en"
+            },
+            {
+              "@value": "Naval Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Security Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Leadership",
+              "@language": "en"
+            },
+            {
+              "@value": "Defense Policy",
+              "@language": "en"
+            },
+            {
+              "@value": "Military History",
+              "@language": "en"
+            },
+            {
+              "@value": "National Security",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Technology",
+              "@language": "en"
+            },
+            {
+              "@value": "Peacekeeping",
+              "@language": "en"
+            },
+            {
+              "@value": "Defense Administration",
+              "@language": "en"
+            },
+            {
+              "@value": "Army",
+              "@language": "en"
+            },
+            {
+              "@value": "Navy",
+              "@language": "en"
+            },
+            {
+              "@value": "Air Force",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Intelligence",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Engineering",
+              "@language": "en"
+            },
+            {
+              "@value": "Maritime Defense",
+              "@language": "en"
+            },
+            {
+              "@value": "Aerial Warfare",
+              "@language": "en"
+            },
+            {
+              "@value": "Strategic Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Military Education",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Military leaders, strategists, defense analysts, security professionals, and military historians who lead, serve in, study, develop doctrine for, or analyze military forces, defense systems, security operations, and strategic affairs. Includes those commanding military units, developing military theory, implementing defense policy, advancing military technology, analyzing security threats, documenting military history, or managing defense institutions across land, sea, air, space, and cyber domains.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes all aspects of military affairs, security studies, defense policy, military history, and peacekeeping, with attention to civil-military relations and the evolution of warfare. When classifying individuals at the intersection of military with other domains, consider whether their primary contribution involves military doctrine, strategy, operations, or institutions (this category) or the application of military expertise within another field. For military engineers, the classification may depend on whether their emphasis is on defense applications and military contexts (this category) or on engineering principles and innovation (Applied Sciences, Technology, and Engineering). For military historians, consider whether their primary identity relates to military doctrine and operations (this category) or to historical methodology and contextualization (History, Heritage, and Memory). Corresponds to LCC classes U-V, with military dimensions appearing in historical, political, and technological classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/socialreform",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Social Reform, Advocacy, and Activism",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Activism",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Movements",
+              "@language": "en"
+            },
+            {
+              "@value": "Humanitarianism",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Justice",
+              "@language": "en"
+            },
+            {
+              "@value": "Civil Rights",
+              "@language": "en"
+            },
+            {
+              "@value": "Human Rights",
+              "@language": "en"
+            },
+            {
+              "@value": "Philanthropy",
+              "@language": "en"
+            },
+            {
+              "@value": "Community Organizing",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Change",
+              "@language": "en"
+            },
+            {
+              "@value": "Advocacy",
+              "@language": "en"
+            },
+            {
+              "@value": "Non-Governmental Organizations",
+              "@language": "en"
+            },
+            {
+              "@value": "Political Activism",
+              "@language": "en"
+            },
+            {
+              "@value": "Charitable Work",
+              "@language": "en"
+            },
+            {
+              "@value": "Labor Organizing",
+              "@language": "en"
+            },
+            {
+              "@value": "Environmental Activism",
+              "@language": "en"
+            },
+            {
+              "@value": "Women's Rights",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Welfare",
+              "@language": "en"
+            },
+            {
+              "@value": "Grassroots Movements",
+              "@language": "en"
+            },
+            {
+              "@value": "Protest Movements",
+              "@language": "en"
+            },
+            {
+              "@value": "Social Activism",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Reformers, activists, organizers, philanthropists, and social change theorists who advocate for, organize, fund, lead, or study social change, reform movements, humanitarian causes, and civic improvements. Includes those developing reform strategies, founding social movements, championing civil and human rights, establishing humanitarian initiatives, funding social innovations, or analyzing the dynamics of social transformation across diverse cultural and political contexts.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Includes advocacy, social movements, philanthropy, humanitarian work, and efforts to advance equity, justice, and social transformation across formal and informal sectors. When classifying individuals at the intersection of social reform with other domains, consider whether their primary contribution involves mobilizing people for systemic change, developing advocacy strategies, or implementing humanitarian interventions (this category) or making theoretical or practical contributions within established systems. For human rights lawyers, the classification may depend on whether their emphasis is on social movement building and structural change (this category) or on legal frameworks and justice systems (Law, Justice, and Jurisprudence). For environmental activists, consider whether their primary identity relates to advocacy and social mobilization (this category) or to scientific research and environmental management (Agriculture, Environment, and Sustainability). Corresponds primarily to LCC subclasses HN (Social history and conditions), HT (Communities, Classes, Races), and HX (Socialism, Communism, Anarchism), with reform dimensions appearing throughout social and political classes.",
+            "@language": "en"
+          }
+        },
+        {
+          "@id": "http://example.org/entityresolution/concept/media",
+          "@type": "skos:Concept",
+          "skos:prefLabel": {
+            "@value": "Media, Journalism, and Communication",
+            "@language": "en"
+          },
+          "skos:altLabel": [
+            {
+              "@value": "Journalism",
+              "@language": "en"
+            },
+            {
+              "@value": "Publishing",
+              "@language": "en"
+            },
+            {
+              "@value": "Broadcasting",
+              "@language": "en"
+            },
+            {
+              "@value": "Information Science",
+              "@language": "en"
+            },
+            {
+              "@value": "News Media",
+              "@language": "en"
+            },
+            {
+              "@value": "Mass Communication",
+              "@language": "en"
+            },
+            {
+              "@value": "Digital Media",
+              "@language": "en"
+            },
+            {
+              "@value": "Media Studies",
+              "@language": "en"
+            },
+            {
+              "@value": "Communication Theory",
+              "@language": "en"
+            },
+            {
+              "@value": "Media Production",
+              "@language": "en"
+            },
+            {
+              "@value": "Information Management",
+              "@language": "en"
+            },
+            {
+              "@value": "Library Science",
+              "@language": "en"
+            },
+            {
+              "@value": "Press",
+              "@language": "en"
+            },
+            {
+              "@value": "Media Ethics",
+              "@language": "en"
+            },
+            {
+              "@value": "Telecommunications",
+              "@language": "en"
+            },
+            {
+              "@value": "Podcasting",
+              "@language": "en"
+            },
+            {
+              "@value": "Online Media",
+              "@language": "en"
+            },
+            {
+              "@value": "Reporting",
+              "@language": "en"
+            },
+            {
+              "@value": "Editorial Work",
+              "@language": "en"
+            },
+            {
+              "@value": "Media Criticism",
+              "@language": "en"
+            }
+          ],
+          "skos:definition": {
+            "@value": "Journalists, publishers, editors, broadcasters, media producers, communication scholars, information specialists, and librarians who gather, report, publish, broadcast, disseminate, preserve, analyze, or manage information through various media channels, information systems, and knowledge institutions. Includes those developing journalistic practices, managing media organizations, studying communication processes, preserving information resources, or advancing information technologies across traditional and digital platforms.",
+            "@language": "en"
+          },
+          "skos:scopeNote": {
+            "@value": "Covers all forms of media and communication, including journalism, publishing, broadcasting, digital media, information science, and library studies. When classifying individuals at the intersection of media with other domains, consider whether their primary contribution involves information gathering, reporting, dissemination, or preservation (this category) or the application of media expertise within another field. For communication scholars, the classification may depend on whether their emphasis is on media systems and information dissemination (this category) or on language and discourse systems (Language, Linguistics, and Communication). For documentary filmmakers, consider whether their primary identity relates to journalistic reporting and media production (this category) or to visual documentation methodology and aesthetic approaches (Documentary and Technical Arts or Performing Arts and Media). Corresponds primarily to LCC classes PN (Literature - journalism aspects), Z (Bibliography, Library Science, Information Resources), and aspects of TK (Broadcasting technology), with communication dimensions appearing throughout other classes.",
+            "@language": "en"
+          }
+        }
+      ]
+    }
+  ]
+}
