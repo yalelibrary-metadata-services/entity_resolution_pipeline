@@ -180,8 +180,6 @@ weaviate_data
 # windsurf rules
 .windsurfrules
 CLAUDE.md*
-CLAUDE.md.bak2
-CLAUDE.md.bak3
 setfit/model_multilingual_minilm
 data/output/
 logs/
