@@ -229,7 +229,7 @@ tpd_poll_interval: 300
 tpd_resume_threshold: 50000000
 
 # Batch Processing Configuration
-use_batch_embeddings: true   # Set to true to use OpenAI Batch API (50% cost savings, 24h turnaround)
+use_batch_embeddings: false   # Set to true to use OpenAI Batch API (50% cost savings, 24h turnaround)
 batch_embedding_size: 50000  # Number of requests per batch file (max 50,000)
 max_requests_per_file: 50000  # Maximum requests per JSONL file
 batch_manual_polling: true   # Set to true for manual polling, false for automatic polling

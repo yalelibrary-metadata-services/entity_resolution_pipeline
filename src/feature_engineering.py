@@ -525,6 +525,10 @@ class FeatureEngineering:
                 logger.warning(f"Field {field} not found for entity {entity_id}")
             return ""
         
+        # Handle NULL sentinel value - return empty string without querying Weaviate
+        if field_hash == "NULL":
+            return ""
+        
         # Check string cache first
         if field_hash in self.string_cache:
             return self.string_cache[field_hash]
@@ -2480,9 +2484,21 @@ class FeatureEngineering:
                     
             else:
                 # Transform only (production mode)
-                if hasattr(self._scaling_bridge.scaler, 'scalers') and self._scaling_bridge.scaler.scalers:
-                    scaled_features = self._scaling_bridge.scaler.transform(features)
-                    logger.debug(f"Transformed {features.shape[0]} samples with {features.shape[1]} features")
+                if hasattr(self._scaling_bridge.scaler, 'scalers') and self._scaling_bridge.scaler.scalers is not None:
+                    # Check if scalers has elements (handle different data types safely)
+                    try:
+                        has_scalers = len(self._scaling_bridge.scaler.scalers) > 0
+                    except (TypeError, AttributeError):
+                        # Handle cases where scalers might not support len() or be None
+                        has_scalers = bool(self._scaling_bridge.scaler.scalers)
+                    
+                    if has_scalers:
+                        scaled_features = self._scaling_bridge.scaler.transform(features)
+                        logger.debug(f"Transformed {features.shape[0]} samples with {features.shape[1]} features")
+                    else:
+                        # Scaler not fitted yet, need to fit first
+                        logger.info("Scaler not fitted yet, performing fit_transform")
+                        scaled_features = self._scaling_bridge.scaler.fit_transform(features, self.feature_names)
                 else:
                     # Scaler not fitted yet, need to fit first
                     logger.info("Scaler not fitted yet, performing fit_transform")

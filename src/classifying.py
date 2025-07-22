@@ -1270,7 +1270,18 @@ class EntityClassification:
             # ARCHITECTURAL FIX: Use transform-only mode (fit=False) to ensure consistent scaling
             if X.shape[0] > 0:
                 # Verify feature_engineering scaler is fitted
-                if not hasattr(self.feature_engineering, 'is_fitted') or not self.feature_engineering.is_fitted:
+                scaler_fitted = False
+                if hasattr(self.feature_engineering, '_scaling_bridge') and \
+                   hasattr(self.feature_engineering._scaling_bridge, 'scaler') and \
+                   hasattr(self.feature_engineering._scaling_bridge.scaler, 'scalers'):
+                    try:
+                        # Check if scalers exist and have content
+                        scaler_fitted = (self.feature_engineering._scaling_bridge.scaler.scalers is not None and
+                                       len(self.feature_engineering._scaling_bridge.scaler.scalers) > 0)
+                    except (TypeError, AttributeError):
+                        scaler_fitted = False
+                
+                if not scaler_fitted:
                     logger.warning("Feature engineering scaler not pre-fitted from training")
                     # Try to load the JSON scaler from our standardized location
                     try:
