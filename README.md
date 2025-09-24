@@ -24,7 +24,7 @@ echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
 echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" >> .env
 
 # Start Weaviate vector database
-docker-compose up -d weaviate
+docker compose up -d
 # Wait ~30 seconds for startup
 curl http://localhost:8080/v1/.well-known/ready  # Check readiness
 ```
@@ -219,8 +219,8 @@ subject_imputation:
 
 **Weaviate Connection**:
 ```bash
-docker-compose ps
-docker-compose logs weaviate
+docker compose ps
+docker compose logs weaviate
 curl http://localhost:8080/v1/.well-known/ready
 ```
 
