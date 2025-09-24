@@ -14,7 +14,7 @@ A production-ready system for identifying and resolving person entities across M
 ```bash
 # Clone and setup environment
 git clone <repository-url>
-cd entity_resolver
+cd entity_resolution_pipeline
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
