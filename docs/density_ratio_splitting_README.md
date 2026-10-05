@@ -11,8 +11,7 @@ between two people or the interior of one person using a conductance-style
 Validated on labeled data ("Schubert, Franz": 89 records, 4 true identities,
 all 3,916 pairs scored): the fused 89-record cluster splits into exactly the
 4 identities, while the two hardest legitimate structures — a heterogeneous
-single-person cluster (the composer's scores vs. streaming videos) and a
-thinly-attached true member (Cid Franco's *Bloqueio*) — pass through untouched.
+single-person cluster (the composer's scores vs. streaming videos) — pass through untouched.
 
 ---
 
@@ -192,46 +191,6 @@ inside the composer: best candidate ratio ≈ 0.19  -> stop
 Result: the four identities exactly. Controls: composer-only (81 records,
 1 person) and Cid Franco (5 records, 1 person) pass through unsplit.
 
-## A common question: don't the two intruders stay stuck to each other?
-
-Looking at the cuts diagram (`schubert_cortes_pt.png`), a sharp-eyed reader
-will notice a red false-positive edge running **directly between the
-genealogist and the liturgist** (p = 0.600), and the dashed cut lines are drawn
-as "liturgist vs. everyone" and "genealogist vs. everyone." So doesn't that
-direct link survive, leaving the two intruders fused into a 2-record cluster?
-
-**No — and understanding why is a nice way to internalize how the cut works.**
-
-Think of each record as a bead, and each accepted match as a thread tying two
-beads together. When the algorithm decides to snip the liturgist bead off the
-tangled ball, it isn't choosing *which* of the liturgist's threads to cut — it
-is lifting the bead out entirely. Every thread attached to it must be cut,
-because every one of them, by definition, runs from the bead to something
-outside it. There is no way to remove a bead while leaving one of its threads
-intact; a thread with only one end attached holds nothing.
-
-The liturgist bead has exactly five threads:
-
-- four to the artist cluster (p = 0.578, 0.573, 0.573, 0.594), and
-- **one to the genealogist (p = 0.600).**
-
-The recorded weight of the first cut is 2.917 — which is precisely the sum of
-those five threads (0.578 + 0.573 + 0.573 + 0.594 + 0.600 = 2.918, matching to
-rounding). The genealogist link is one of the five. It does not slip through;
-it is severed in step 1 along with the rest.
-
-After that snip, the genealogist has only its four threads into the artist
-cluster left (0.647 + 0.634 + 0.634 + 0.661 = 2.576 — again exactly the
-recorded second cut, 2.575). Step 2 takes those, and both intruders end as
-clean singletons. At no point do they exist as a pair of two.
-
-One belt-and-suspenders detail: even in a hypothetical run where the two
-intruders *had* been left together as a 2-record cluster, the recursion stops
-at clusters below `density_min_cluster_size` (default 3) — a 2-record cluster
-is a single accepted edge the classifier already voted on, and the second pass
-does not re-litigate individual votes. So the only mechanism that separates
-them is the singleton cut taking the whole adjacency — and it does.
-
 ## Rejected alternatives (measured failures)
 
 - **Absolute cut-weight threshold** — margin collapsed to 0.013 on the full
@@ -273,16 +232,5 @@ them is the singleton cut taking the whole adjacency — and it does.
 
 ## Related material
 
-- Implementation: `src/cluster_validation.py`, `prevent_overmerging_density`
-  (dispatch from `prevent_overmerging` when `method: "density_ratio"`).
-- Validation: `scripts/weaviate_recovery/validate_density_split.py`.
-- Full pairwise scoring that produced the labeled graph:
-  `scripts/weaviate_recovery/score_schubert_full.py` →
-  `data/output/reports/franco_cid/schubert_full_pair_scores.csv`.
-- Graphs and case-study assets: `scripts/weaviate_recovery/charts/` →
-  `data/output/reports/franco_cid/` (`schubert_overmerge_full_pt.png`,
-  `schubert_cortes_pt.png`, `teste_razao_pt.png`).
-- Pedagogical case study (pt-BR, with executive summary):
-  `data/output/reports/franco_cid/density_ratio_case_study.html`.
 - Algorithm reference: M. Stoer & F. Wagner, "A simple min-cut algorithm,"
   *Journal of the ACM* 44(4), 1997.
