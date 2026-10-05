@@ -1,0 +1,17 @@
+{
+  "timestamp": "20260316_143956",
+  "configuration": {
+    "similarity_threshold": 0.7,
+    "remediation_threshold": 0.6,
+    "min_alternatives": 3,
+    "max_candidates": 100,
+    "frequency_weight": 0.3,
+    "similarity_weight": 0.7,
+    "confidence_threshold": 0.8,
+    "auto_remediate": true
+  },
+  "statistics": {
+    "total_records_evaluated": 0
+  },
+  "remediation_count": 0
+}

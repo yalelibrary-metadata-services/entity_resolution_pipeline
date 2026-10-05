@@ -1,0 +1,108 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Feature Visualization Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+            h1, h2, h3 { color: #333; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .visualization { margin: 30px 0; }
+            .visualization img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+        </style>
+    </head>
+    <body>
+        <h1>Feature Visualization Report</h1>
+        
+        <h2>Feature Metrics</h2>
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Model Weight</th>
+                <th>AUC Score</th>
+                <th>Absolute Weight</th>
+            </tr>
+    
+            <tr>
+                <td>birth_death_match</td>
+                <td>2.2444</td>
+                <td>0.8781</td>
+                <td>2.2444</td>
+            </tr>
+        
+            <tr>
+                <td>composite_cosine_squared</td>
+                <td>1.4718</td>
+                <td>0.9160</td>
+                <td>1.4718</td>
+            </tr>
+        
+            <tr>
+                <td>taxonomy_dissimilarity</td>
+                <td>-1.4386</td>
+                <td>0.1358</td>
+                <td>1.4386</td>
+            </tr>
+        
+            <tr>
+                <td>confidence_amplifier_polynomial</td>
+                <td>1.1793</td>
+                <td>0.9356</td>
+                <td>1.1793</td>
+            </tr>
+        
+            <tr>
+                <td>person_cosine</td>
+                <td>1.0293</td>
+                <td>0.8756</td>
+                <td>1.0293</td>
+            </tr>
+        
+            <tr>
+                <td>has_related_work</td>
+                <td>0.9020</td>
+                <td>0.5687</td>
+                <td>0.9020</td>
+            </tr>
+        
+            <tr>
+                <td>person_title_interaction_cubic</td>
+                <td>0.6448</td>
+                <td>0.9229</td>
+                <td>0.6448</td>
+            </tr>
+        
+            <tr>
+                <td>provision_similarity</td>
+                <td>0.4204</td>
+                <td>0.7463</td>
+                <td>0.4204</td>
+            </tr>
+        
+        </table>
+        
+        <h2>Feature Distributions</h2>
+        <p>These plots show how each feature is distributed across the match and non-match classes.</p>
+        <div class="visualization">
+            <img src="../plots/feature_distributions/all_feature_distributions.png" alt="Feature Distributions">
+        </div>
+        
+        <h2>Class Separation</h2>
+        <p>These plots show how well each feature separates the match and non-match classes.</p>
+        <div class="visualization">
+            <img src="../plots/class_separation/all_feature_roc_curves.png" alt="ROC Curves">
+        </div>
+        <div class="visualization">
+            <img src="../plots/class_separation/all_feature_pr_curves.png" alt="Precision-Recall Curves">
+        </div>
+        
+        <h2>Feature Importance Comparison</h2>
+        <div class="visualization">
+            <img src="../plots/class_separation/feature_auc_comparison.png" alt="Feature AUC Comparison">
+        </div>
+    </body>
+    </html>
+    

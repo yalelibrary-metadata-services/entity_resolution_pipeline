@@ -1,0 +1,60 @@
+{
+  "raw_weights": {
+    "person_cosine": 1.0292530059752267,
+    "taxonomy_dissimilarity": -1.4386275025921544,
+    "composite_cosine_squared": 1.4717929528092366,
+    "has_related_work": 0.901990880197725,
+    "birth_death_match": 2.244416887116757,
+    "confidence_amplifier_polynomial": 1.1793343530394056,
+    "person_title_interaction_cubic": 0.6448409659930759,
+    "provision_similarity": 0.4203711862612843
+  },
+  "effective_weights": {
+    "person_cosine": {
+      "raw_weight": 1.0292530059752267,
+      "importance_factor": 1.0,
+      "effective_weight": 1.0292530059752267
+    },
+    "taxonomy_dissimilarity": {
+      "raw_weight": -1.4386275025921544,
+      "importance_factor": 0.8,
+      "effective_weight": -1.1509020020737235
+    },
+    "composite_cosine_squared": {
+      "raw_weight": 1.4717929528092366,
+      "importance_factor": 1.0,
+      "effective_weight": 1.4717929528092366
+    },
+    "has_related_work": {
+      "raw_weight": 0.901990880197725,
+      "importance_factor": 1.0,
+      "effective_weight": 0.901990880197725
+    },
+    "birth_death_match": {
+      "raw_weight": 2.244416887116757,
+      "importance_factor": 2.5,
+      "effective_weight": 5.611042217791892
+    },
+    "confidence_amplifier_polynomial": {
+      "raw_weight": 1.1793343530394056,
+      "importance_factor": 1.0,
+      "effective_weight": 1.1793343530394056
+    },
+    "person_title_interaction_cubic": {
+      "raw_weight": 0.6448409659930759,
+      "importance_factor": 1.0,
+      "effective_weight": 0.6448409659930759
+    },
+    "provision_similarity": {
+      "raw_weight": 0.4203711862612843,
+      "importance_factor": 1.0,
+      "effective_weight": 0.4203711862612843
+    }
+  },
+  "importance_factors": {
+    "taxonomy_dissimilarity": 0.8,
+    "birth_death_match": 2.5
+  },
+  "normalized_used": true,
+  "test_results_note": "Test results contain both raw and normalized feature values with prefixes raw_ and norm_"
+}

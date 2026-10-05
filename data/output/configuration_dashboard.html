@@ -1,0 +1,838 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Feature Configuration Analysis Dashboard</title>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/datatables@1.10.18/media/js/jquery.dataTables.min.js"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables@1.10.18/media/css/jquery.dataTables.min.css">
+            <style>
+                .chart-container {
+                    width: 100%;
+                    height: 400px;
+                    margin-bottom: 30px;
+                }
+                .card {
+                    margin-bottom: 20px;
+                }
+                .table-container {
+                    margin-top: 30px;
+                    margin-bottom: 50px;
+                }
+                .filters {
+                    margin-bottom: 20px;
+                    padding: 15px;
+                    background-color: #f8f9fa;
+                    border-radius: 5px;
+                }
+                .header {
+                    background-color: #343a40;
+                    color: white;
+                    padding: 20px 0;
+                    margin-bottom: 30px;
+                }
+                .metric-card {
+                    text-align: center;
+                    padding: 15px;
+                }
+                .metric-value {
+                    font-size: 24px;
+                    font-weight: bold;
+                }
+                .metric-label {
+                    font-size: 14px;
+                    color: #6c757d;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="container">
+                    <h1>Feature Configuration Analysis Dashboard</h1>
+                    <p>Analysis of feature configurations for entity resolution</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <!-- Summary Metrics -->
+                <div class="row mb-4" id="summaryMetrics">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <!-- Filters -->
+                <div class="row filters">
+                    <div class="col-md-2">
+                        <label for="perfectPrecisionFilter">Precision Requirements:</label>
+                        <select id="perfectPrecisionFilter" class="form-select">
+                            <option value="all">All Configurations</option>
+                            <option value="perfect" selected>Only Perfect Precision</option>
+                            <option value="imperfect">Imperfect Precision</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="precisionWeightFilter">Precision Weight:</label>
+                        <select id="precisionWeightFilter" class="form-select">
+                            <option value="all" selected>All Weights</option>
+                            <option value="0.3">Low (0.3)</option>
+                            <option value="0.5">Balanced (0.5)</option>
+                            <option value="0.7">High (0.7)</option>
+                            <option value="0.9">Very High (0.9)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="approachFilter">Similarity Approach:</label>
+                        <select id="approachFilter" class="form-select">
+                            <option value="all" selected>All Approaches</option>
+                            <option value="binary">Binary Indicators</option>
+                            <option value="direct">Direct Similarity</option>
+                            <option value="hybrid">Hybrid Approach</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="metricSort">Sort By:</label>
+                        <select id="metricSort" class="form-select">
+                            <option value="recall" selected>Recall</option>
+                            <option value="precision">Precision</option>
+                            <option value="f1">F1 Score</option>
+                            <option value="balanced_score">Balanced Score</option>
+                            <option value="specificity">Specificity</option>
+                            <option value="accuracy">Accuracy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="configCount">Top Configurations:</label>
+                        <select id="configCount" class="form-select">
+                            <option value="10" selected>Top 10</option>
+                            <option value="20">Top 20</option>
+                            <option value="50">Top 50</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Performance by Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Precision vs Recall</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="scatterChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Approach Comparison</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="approachChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Table Section -->
+                <div class="table-container">
+                    <h3>Configuration Details</h3>
+                    <table id="configurationsTable" class="table table-striped table-bordered" width="100%">
+                        <!-- Table will be populated by JavaScript -->
+                    </table>
+                </div>
+            </div>
+            
+            <script>
+                // Dashboard initialization
+                document.addEventListener('DOMContentLoaded', function() {
+                    try {
+                        // Check if data is loaded from embedded source or needs to be loaded from CSV
+                        loadConfigurationData();
+                    } catch (e) {
+                        console.error('Dashboard initialization error:', e);
+                        showError(`Dashboard initialization error: ${e.message}`);
+                    }
+                });
+
+                // Function to load data from CSV
+                function loadConfigurationData() {
+                    const csvPath = 'configuration_results.csv';
+                    console.log('Attempting to load from CSV file:', csvPath);
+                    
+                    Papa.parse(csvPath, {
+                        download: true,
+                        header: true,
+                        dynamicTyping: true,
+                        complete: function(results) {
+                            const data = results.data;
+                            
+                            // Filter out rows with null configuration_name (indicates errors)
+                            const validData = data.filter(row => row.configuration_name);
+                            
+                            if (validData && validData.length > 0) {
+                                console.log(`Loaded ${validData.length} configuration records from CSV`);
+                                
+                                // Ensure balanced_score is calculated for all configurations
+                                validData.forEach(row => {
+                                    if (!row.balanced_score && row.precision > 0 && row.recall > 0) {
+                                        const precision = parseFloat(row.precision);
+                                        const recall = parseFloat(row.recall);
+                                        const precisionWeight = parseFloat(row.precision_weight || 0.5);
+                                        
+                                        // Calculate balanced score
+                                        if (precision > 0 && recall > 0 && 0 <= precisionWeight && precisionWeight <= 1) {
+                                            const weightRatio = precisionWeight < 1.0 ? 
+                                                precisionWeight / (1.0 - precisionWeight) : 1.0;
+                                            
+                                            const denominator = weightRatio * precision + recall;
+                                            if (denominator > 0) {
+                                                row.balanced_score = ((1 + weightRatio) * precision * recall) / denominator;
+                                            } else {
+                                                row.balanced_score = 0.0;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Ensure precision_weight has a value
+                                    if (!row.precision_weight) {
+                                        row.precision_weight = 0.5;
+                                    }
+                                });
+                                
+                                initializeDashboard(validData);
+                            } else {
+                                showError('No valid configuration data found in CSV file.');
+                            }
+                        },
+                        error: function(error) {
+                            console.error('Error loading CSV:', error);
+                            showError(`Error loading CSV: ${error.message}. Try serving this file from an HTTP server.`);
+                        }
+                    });
+                }
+                
+                // Function to display error messages
+                function showError(message) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger';
+                    errorDiv.innerHTML = `
+                        <h4>Error loading configuration data</h4>
+                        <p>${message}</p>
+                        <hr>
+                        <h5>Troubleshooting:</h5>
+                        <ol>
+                            <li>Try opening this dashboard using a local web server:</li>
+                            <pre>python -m http.server 8000</pre>
+                            <li>Then navigate to: <code>http://localhost:8000/configuration_dashboard.html</code></li>
+                            <li>Check that the configuration_results.csv file exists in the expected location</li>
+                        </ol>
+                    `;
+                    document.body.prepend(errorDiv);
+                }
+                
+                function initializeDashboard(data) {
+                    // Update summary metrics
+                    updateSummaryMetrics(data);
+                    
+                    // Initialize charts
+                    createPerformanceChart(data);
+                    createScatterChart(data);
+                    createApproachComparisonChart(data);
+                    
+                    // Initialize data table
+                    initializeDataTable(data);
+                    
+                    // Set up event listeners for filters
+                    setupFilterListeners(data);
+                }
+                
+                function updateSummaryMetrics(data) {
+                    // Calculate summary metrics
+                    const perfectPrecisionCount = data.filter(d => d.perfect_precision).length;
+                    const highRecallCount = data.filter(d => d.recall >= 0.9).length;
+                    const averagePrecision = data.reduce((sum, d) => sum + d.precision, 0) / data.length;
+                    const averageRecall = data.reduce((sum, d) => sum + d.recall, 0) / data.length;
+                    const averageBalancedScore = data.reduce((sum, d) => sum + (d.balanced_score || 0), 0) / data.length;
+                    const averageSpecificity = data.reduce((sum, d) => sum + (d.specificity || 0), 0) / data.length;
+                    const averageAccuracy = data.reduce((sum, d) => sum + (d.accuracy || 0), 0) / data.length;
+                    
+                    // Find best configuration (highest recall with perfect precision)
+                    let bestConfig = null;
+                    let bestRecall = 0;
+                    
+                    data.filter(d => d.perfect_precision).forEach(d => {
+                        if (d.recall > bestRecall) {
+                            bestRecall = d.recall;
+                            bestConfig = d;
+                        }
+                    });
+                    
+                    // Create HTML for summary metrics
+                    const summaryHTML = `
+                        <div class="col-md-2">
+                            <div class="card metric-card">
+                                <div class="metric-value">${data.length}</div>
+                                <div class="metric-label">Total Configurations</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card metric-card">
+                                <div class="metric-value">${perfectPrecisionCount}</div>
+                                <div class="metric-label">Perfect Precision</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card metric-card">
+                                <div class="metric-value">${highRecallCount}</div>
+                                <div class="metric-label">High Recall (≥0.9)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card metric-card">
+                                <div class="metric-value">${averagePrecision.toFixed(3)}</div>
+                                <div class="metric-label">Avg Precision</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card metric-card">
+                                <div class="metric-value">${averageRecall.toFixed(3)}</div>
+                                <div class="metric-label">Avg Recall</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card metric-card" style="background-color: #e8f5e9;">
+                                <div class="metric-value">${bestConfig ? bestRecall.toFixed(3) : 'N/A'}</div>
+                                <div class="metric-label">Best Recall</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    $('#summaryMetrics').html(summaryHTML);
+                }
+                
+                function createPerformanceChart(data) {
+                    // Apply filters
+                    const perfectOnly = $('#perfectPrecisionFilter').val() === 'perfect';
+                    const approachFilter = $('#approachFilter').val();
+                    const precisionWeightFilter = $('#precisionWeightFilter').val();
+                    const sortMetric = $('#metricSort').val();
+                    const configCount = $('#configCount').val();
+                    
+                    // Filter data
+                    let filteredData = data;
+                    if (perfectOnly) {
+                        filteredData = filteredData.filter(d => d.perfect_precision);
+                    } else if ($('#perfectPrecisionFilter').val() === 'imperfect') {
+                        filteredData = filteredData.filter(d => !d.perfect_precision);
+                    }
+                    
+                    if (approachFilter !== 'all') {
+                        filteredData = filteredData.filter(d => d.similarity_approach === approachFilter);
+                    }
+                    
+                    if (precisionWeightFilter !== 'all') {
+                        const targetWeight = parseFloat(precisionWeightFilter);
+                        filteredData = filteredData.filter(d => {
+                            // Allow small tolerance for floating point comparison
+                            const weight = parseFloat(d.precision_weight || 0.5);
+                            return Math.abs(weight - targetWeight) < 0.01;
+                        });
+                    }
+                    
+                    // Sort by selected metric
+                    filteredData.sort((a, b) => b[sortMetric] - a[sortMetric]);
+                    
+                    // Limit to selected count
+                    if (configCount !== 'all') {
+                        filteredData = filteredData.slice(0, parseInt(configCount));
+                    }
+                    
+                    // Prepare chart data
+                    const labels = filteredData.map(d => d.configuration_name);
+                    const precisionData = filteredData.map(d => d.precision);
+                    const recallData = filteredData.map(d => d.recall);
+                    const f1Data = filteredData.map(d => d.f1);
+                    const balancedScoreData = filteredData.map(d => d.balanced_score || 0);
+                    const specificityData = filteredData.map(d => d.specificity || 0);
+                    const accuracyData = filteredData.map(d => d.accuracy || 0);
+                    
+                    // Create chart
+                    const ctx = document.getElementById('performanceChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (window.performanceChart) {
+                        window.performanceChart.destroy();
+                    }
+                    
+                    window.performanceChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Precision',
+                                    data: precisionData,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Recall',
+                                    data: recallData,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'F1 Score',
+                                    data: f1Data,
+                                    backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                                    borderColor: 'rgba(255, 159, 64, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Balanced Score',
+                                    data: balancedScoreData,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Specificity',
+                                    data: specificityData,
+                                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                                    borderColor: 'rgba(153, 102, 255, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Accuracy',
+                                    data: accuracyData,
+                                    backgroundColor: 'rgba(201, 203, 207, 0.5)',
+                                    borderColor: 'rgba(201, 203, 207, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    max: 1.0
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Performance Metrics by Configuration (Top ${configCount !== 'all' ? configCount : labels.length})`
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                function createScatterChart(data) {
+                    // Apply filters
+                    const perfectOnly = $('#perfectPrecisionFilter').val() === 'perfect';
+                    const approachFilter = $('#approachFilter').val();
+                    const precisionWeightFilter = $('#precisionWeightFilter').val();
+                    
+                    // Filter data
+                    let filteredData = data;
+                    if (perfectOnly) {
+                        filteredData = filteredData.filter(d => d.perfect_precision);
+                    } else if ($('#perfectPrecisionFilter').val() === 'imperfect') {
+                        filteredData = filteredData.filter(d => !d.perfect_precision);
+                    }
+                    
+                    if (approachFilter !== 'all') {
+                        filteredData = filteredData.filter(d => d.similarity_approach === approachFilter);
+                    }
+                    
+                    if (precisionWeightFilter !== 'all') {
+                        const targetWeight = parseFloat(precisionWeightFilter);
+                        filteredData = filteredData.filter(d => {
+                            // Allow small tolerance for floating point comparison
+                            const weight = parseFloat(d.precision_weight || 0.5);
+                            return Math.abs(weight - targetWeight) < 0.01;
+                        });
+                    }
+                    
+                    // Group by approach
+                    const binaryData = filteredData.filter(d => d.similarity_approach === 'binary');
+                    const directData = filteredData.filter(d => d.similarity_approach === 'direct');
+                    const hybridData = filteredData.filter(d => d.similarity_approach === 'hybrid');
+                    
+                    // Create chart
+                    const ctx = document.getElementById('scatterChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (window.scatterChart) {
+                        window.scatterChart.destroy();
+                    }
+                    
+                    window.scatterChart = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [
+                                {
+                                    label: 'Binary Indicators',
+                                    data: binaryData.map(d => ({ x: d.recall, y: d.precision })),
+                                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                                    pointRadius: 5,
+                                    pointHoverRadius: 7
+                                },
+                                {
+                                    label: 'Direct Similarity',
+                                    data: directData.map(d => ({ x: d.recall, y: d.precision })),
+                                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                    pointRadius: 5,
+                                    pointHoverRadius: 7
+                                },
+                                {
+                                    label: 'Hybrid Approach',
+                                    data: hybridData.map(d => ({ x: d.recall, y: d.precision })),
+                                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                                    pointRadius: 5,
+                                    pointHoverRadius: 7
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Recall'
+                                    },
+                                    min: 0,
+                                    max: 1.0
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Precision'
+                                    },
+                                    min: 0,
+                                    max: 1.0
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Precision vs Recall by Approach'
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const index = context.dataIndex;
+                                            const dataset = context.dataset;
+                                            const datasetIndex = context.datasetIndex;
+                                            
+                                            let originalData;
+                                            if (datasetIndex === 0) originalData = binaryData[index];
+                                            else if (datasetIndex === 1) originalData = directData[index];
+                                            else originalData = hybridData[index];
+                                            
+                                            if (!originalData) return '';
+                                            
+                                            return [
+                                                `Config: ${originalData.configuration_name}`,
+                                                `Precision: ${originalData.precision.toFixed(4)}`,
+                                                `Recall: ${originalData.recall.toFixed(4)}`,
+                                                `F1: ${originalData.f1.toFixed(4)}`,
+                                                `Balanced Score: ${(originalData.balanced_score || 0).toFixed(4)}`,
+                                                `Precision Weight: ${(originalData.precision_weight || 0.5).toFixed(2)}`,
+                                                `Specificity: ${(originalData.specificity || 0).toFixed(4)}`,
+                                                `Accuracy: ${(originalData.accuracy || 0).toFixed(4)}`,
+                                                `Perfect Precision: ${originalData.perfect_precision ? 'Yes' : 'No'}`
+                                            ];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                function createApproachComparisonChart(data) {
+                    // Apply the precision weight filter if specified
+                    const precisionWeightFilter = $('#precisionWeightFilter').val();
+                    let filteredData = data;
+                    
+                    if (precisionWeightFilter !== 'all') {
+                        const targetWeight = parseFloat(precisionWeightFilter);
+                        filteredData = filteredData.filter(d => {
+                            // Allow small tolerance for floating point comparison
+                            const weight = parseFloat(d.precision_weight || 0.5);
+                            return Math.abs(weight - targetWeight) < 0.01;
+                        });
+                    }
+                    
+                    // Group by approach
+                    const approaches = {'binary': [], 'direct': [], 'hybrid': []};
+                    
+                    filteredData.forEach(d => {
+                        if (d.similarity_approach && approaches.hasOwnProperty(d.similarity_approach)) {
+                            approaches[d.similarity_approach].push(d);
+                        }
+                    });
+                    
+                    // Calculate average metrics for each approach
+                    const avgMetrics = {};
+                    Object.keys(approaches).forEach(approach => {
+                        const configs = approaches[approach];
+                        if (configs.length > 0) {
+                            avgMetrics[approach] = {
+                                precision: configs.reduce((sum, d) => sum + d.precision, 0) / configs.length,
+                                recall: configs.reduce((sum, d) => sum + d.recall, 0) / configs.length,
+                                f1: configs.reduce((sum, d) => sum + d.f1, 0) / configs.length,
+                                balanced_score: configs.reduce((sum, d) => sum + (d.balanced_score || 0), 0) / configs.length,
+                                specificity: configs.reduce((sum, d) => sum + (d.specificity || 0), 0) / configs.length,
+                                accuracy: configs.reduce((sum, d) => sum + (d.accuracy || 0), 0) / configs.length,
+                                perfectPrecisionPct: configs.filter(d => d.perfect_precision).length / configs.length * 100
+                            };
+                        }
+                    });
+                    
+                    // Create chart
+                    const ctx = document.getElementById('approachChart').getContext('2d');
+                    
+                    // Destroy existing chart if it exists
+                    if (window.approachChart) {
+                        window.approachChart.destroy();
+                    }
+                    
+                    // Prepare data
+                    const labels = Object.keys(avgMetrics).map(a => a.charAt(0).toUpperCase() + a.slice(1));
+                    const precisionData = Object.values(avgMetrics).map(m => m.precision);
+                    const recallData = Object.values(avgMetrics).map(m => m.recall);
+                    const f1Data = Object.values(avgMetrics).map(m => m.f1);
+                    const balancedScoreData = Object.values(avgMetrics).map(m => m.balanced_score);
+                    const specificityData = Object.values(avgMetrics).map(m => m.specificity);
+                    const accuracyData = Object.values(avgMetrics).map(m => m.accuracy);
+                    const perfectPrecisionData = Object.values(avgMetrics).map(m => m.perfectPrecisionPct);
+                    
+                    window.approachChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Avg Precision',
+                                    data: precisionData,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Avg Recall',
+                                    data: recallData,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Avg F1 Score',
+                                    data: f1Data,
+                                    backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                                    borderColor: 'rgba(255, 159, 64, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Avg Balanced Score',
+                                    data: balancedScoreData,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Avg Specificity',
+                                    data: specificityData,
+                                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                                    borderColor: 'rgba(153, 102, 255, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Avg Accuracy',
+                                    data: accuracyData,
+                                    backgroundColor: 'rgba(201, 203, 207, 0.5)',
+                                    borderColor: 'rgba(201, 203, 207, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: '% Perfect Precision',
+                                    data: perfectPrecisionData,
+                                    backgroundColor: 'rgba(255, 205, 86, 0.5)',
+                                    borderColor: 'rgba(255, 205, 86, 1)',
+                                    borderWidth: 1,
+                                    yAxisID: 'y1'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    position: 'left',
+                                    beginAtZero: true,
+                                    max: 1.0,
+                                    title: {
+                                        display: true,
+                                        text: 'Average Score'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    position: 'right',
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: 'Percentage'
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Performance by Similarity Approach'
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                function initializeDataTable(data) {
+                    // Apply the initial filters
+                    const perfectOnly = $('#perfectPrecisionFilter').val() === 'perfect';
+                    const approachFilter = $('#approachFilter').val();
+                    const precisionWeightFilter = $('#precisionWeightFilter').val();
+                    
+                    // Filter data
+                    let filteredData = data;
+                    if (perfectOnly) {
+                        filteredData = filteredData.filter(d => d.perfect_precision);
+                    } else if ($('#perfectPrecisionFilter').val() === 'imperfect') {
+                        filteredData = filteredData.filter(d => !d.perfect_precision);
+                    }
+                    
+                    if (approachFilter !== 'all') {
+                        filteredData = filteredData.filter(d => d.similarity_approach === approachFilter);
+                    }
+                    
+                    if (precisionWeightFilter !== 'all') {
+                        const targetWeight = parseFloat(precisionWeightFilter);
+                        filteredData = filteredData.filter(d => {
+                            // Allow small tolerance for floating point comparison
+                            const weight = parseFloat(d.precision_weight || 0.5);
+                            return Math.abs(weight - targetWeight) < 0.01;
+                        });
+                    }
+                    
+                    // Format data for DataTable
+                    const tableData = filteredData.map(row => {
+                        return {
+                            configuration_name: row.configuration_name,
+                            precision: row.precision ? row.precision.toFixed(4) : 'N/A',
+                            recall: row.recall ? row.recall.toFixed(4) : 'N/A',
+                            f1: row.f1 ? row.f1.toFixed(4) : 'N/A',
+                            balanced_score: row.balanced_score ? row.balanced_score.toFixed(4) : 'N/A',
+                            precision_weight: row.precision_weight ? row.precision_weight.toFixed(2) : '0.50',
+                            specificity: row.specificity ? row.specificity.toFixed(4) : 'N/A',
+                            accuracy: row.accuracy ? row.accuracy.toFixed(4) : 'N/A',
+                            similarity_approach: row.similarity_approach || 'unknown',
+                            perfect_precision: row.perfect_precision ? 'Yes' : 'No',
+                            decision_threshold: row.decision_threshold ? row.decision_threshold.toFixed(4) : 'N/A',
+                            execution_time: row.execution_time || 'N/A'
+                        };
+                    });
+                    
+                    // Destroy existing DataTable if it exists
+                    if ($.fn.DataTable.isDataTable('#configurationsTable')) {
+                        $('#configurationsTable').DataTable().destroy();
+                    }
+                    
+                    // Initialize DataTable
+                    $('#configurationsTable').DataTable({
+                        data: tableData,
+                        columns: [
+                            { title: "Configuration", data: "configuration_name" },
+                            { title: "Precision", data: "precision" },
+                            { title: "Recall", data: "recall" },
+                            { title: "F1 Score", data: "f1" },
+                            { title: "Balanced Score", data: "balanced_score" },
+                            { title: "Precision Weight", data: "precision_weight" },
+                            { title: "Perfect Precision", data: "perfect_precision" },
+                            { title: "Approach", data: "similarity_approach" },
+                            { title: "Threshold", data: "decision_threshold" },
+                            { title: "Exec Time (s)", data: "execution_time" }
+                        ],
+                        pageLength: 10,
+                        lengthMenu: [10, 25, 50, 100],
+                        order: [[3, 'desc']], // Default sort by F1 score
+                        responsive: true,
+                        dom: 'Bfrtip',
+                        language: {
+                            search: "Filter Results:"
+                        }
+                    });
+                }
+                
+                function setupFilterListeners(data) {
+                    // Set up event listeners for filters
+                    $('#perfectPrecisionFilter, #approachFilter, #precisionWeightFilter, #metricSort, #configCount').on('change', function() {
+                        // Update charts with filtered data
+                        createPerformanceChart(data);
+                        createScatterChart(data);
+                        createApproachComparisonChart(data);
+                        initializeDataTable(data);
+                    });
+                }
+            </script>
+        </body>
+        </html>
+        

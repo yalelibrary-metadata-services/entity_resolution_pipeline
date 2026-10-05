@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "generated_at": "20260316_143956",
+    "generated_by": "Subject Enhancement Reporting Module",
+    "pipeline_config": {
+      "quality_audit_enabled": true,
+      "imputation_enabled": true,
+      "quality_auto_remediate": true,
+      "quality_confidence_threshold": 0.8,
+      "imputation_confidence_threshold": 0.7
+    }
+  },
+  "summary": {
+    "total_records": 2539,
+    "records_with_subjects": 2188,
+    "records_missing_subjects": 351,
+    "quality_evaluated_records": 0,
+    "quality_remediated_records": 0,
+    "imputed_records": 0,
+    "enhancement_coverage": 0.0
+  },
+  "quality_audit": {
+    "enabled": true,
+    "evaluated_records": [],
+    "remediated_records": [],
+    "statistics": {},
+    "external_report": {
+      "source_file": "subject_quality_audit_20260316_143956.json",
+      "statistics": {
+        "total_records_evaluated": 0
+      },
+      "configuration": {
+        "similarity_threshold": 0.7,
+        "remediation_threshold": 0.6,
+        "min_alternatives": 3,
+        "max_candidates": 100,
+        "frequency_weight": 0.3,
+        "similarity_weight": 0.7,
+        "confidence_threshold": 0.8,
+        "auto_remediate": true
+      }
+    }
+  },
+  "subject_imputation": {
+    "enabled": true,
+    "imputed_records": [],
+    "statistics": {},
+    "external_report": {
+      "source_file": "subject_imputation_results_20260316_143956.json",
+      "statistics": {
+        "no_results": true
+      },
+      "configuration": {
+        "similarity_threshold": 0.65,
+        "confidence_threshold": 0.7,
+        "min_candidates": 3,
+        "max_candidates": 150,
+        "frequency_weight": 0.3,
+        "centroid_weight": 0.7
+      }
+    }
+  },
+  "detailed_results": []
+}

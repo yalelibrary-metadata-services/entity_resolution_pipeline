@@ -1,0 +1,138 @@
+{
+  "run_id": "20260315_220504",
+  "hostname": "MWPF4KM560.yu.yale.edu",
+  "start_time": "2026-03-15T22:05:04.371956",
+  "configuration": {
+    "batch_size": 500,
+    "num_workers": 8,
+    "vector_similarity_threshold": 0.7,
+    "decision_threshold": 0.55,
+    "uses_hash_based_optimization": true,
+    "scaling_strategy": "library_catalog"
+  },
+  "performance": {
+    "batch_processing_times": [
+      {
+        "batch_index": 1,
+        "batch_size": 478,
+        "processing_time": 3.170544147491455,
+        "candidates_found": 15352,
+        "matches_found": 11990,
+        "hash_groups": 15,
+        "similar_hash_groups": 31
+      },
+      {
+        "batch_index": 2,
+        "batch_size": 490,
+        "processing_time": 3.112813949584961,
+        "candidates_found": 10777,
+        "matches_found": 8527,
+        "hash_groups": 24,
+        "similar_hash_groups": 49
+      },
+      {
+        "batch_index": 3,
+        "batch_size": 483,
+        "processing_time": 2.896961212158203,
+        "candidates_found": 12646,
+        "matches_found": 8226,
+        "hash_groups": 26,
+        "similar_hash_groups": 52
+      },
+      {
+        "batch_index": 4,
+        "batch_size": 494,
+        "processing_time": 2.750704050064087,
+        "candidates_found": 12208,
+        "matches_found": 8923,
+        "hash_groups": 31,
+        "similar_hash_groups": 50
+      },
+      {
+        "batch_index": 5,
+        "batch_size": 490,
+        "processing_time": 4.0641138553619385,
+        "candidates_found": 28223,
+        "matches_found": 21926,
+        "hash_groups": 73,
+        "similar_hash_groups": 129
+      },
+      {
+        "batch_index": 6,
+        "batch_size": 104,
+        "processing_time": 0.7610511779785156,
+        "candidates_found": 5047,
+        "matches_found": 3924,
+        "hash_groups": 20,
+        "similar_hash_groups": 41
+      }
+    ],
+    "query_times": [
+      0.20952224731445312,
+      0.21083784103393555,
+      0.26968908309936523,
+      0.3349130153656006,
+      0.7808380126953125,
+      0.23352789878845215
+    ],
+    "feature_calculation_times": [
+      2.9311270713806152,
+      2.8885319232940674,
+      2.6132407188415527,
+      2.400320053100586,
+      3.1870739459991455,
+      0.5217339992523193
+    ],
+    "prediction_times": [
+      0.0009448528289794922,
+      0.0005712509155273438,
+      0.0006420612335205078,
+      0.0005807876586914062,
+      0.0010499954223632812,
+      0.0003540515899658203
+    ],
+    "normalization_times": []
+  },
+  "progress": {
+    "processed_entities": 0,
+    "processed_pairs": 84253,
+    "matches_found": 63516,
+    "hash_groups_processed": 189,
+    "similar_hash_groups_found": 352,
+    "duplicates_removed": 0
+  },
+  "errors": {
+    "query_errors": 0,
+    "feature_errors": 0,
+    "prediction_errors": 0,
+    "retried_operations": 0,
+    "failed_operations": 0
+  },
+  "memory": {
+    "peak_usage_percent": 82.5,
+    "memory_warnings": 1
+  },
+  "vector_search": {
+    "direct_vector_searches": 0,
+    "successful_vector_searches": 0,
+    "fallback_to_hash_searches": 0,
+    "hash_based_searches": 0,
+    "vector_cache_hits": 63,
+    "hash_cache_hits": 0
+  },
+  "hash_based_grouping": {
+    "total_hash_groups": 189,
+    "total_similar_hash_groups": 352,
+    "largest_hash_group_size": 77,
+    "largest_similar_hash_group_size": 77,
+    "original_hash_additions": 0
+  },
+  "normalization_metrics": {
+    "binary_features_preserved": 0,
+    "binary_features_fixed": 0,
+    "out_of_range_features_fixed": 0
+  },
+  "end_time": "2026-03-15T22:05:31.139298",
+  "processing_time": 26.767243146896362,
+  "last_updated": "2026-03-15T22:05:31.139473"
+}

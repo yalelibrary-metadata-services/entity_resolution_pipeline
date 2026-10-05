@@ -1,0 +1,15 @@
+{
+  "timestamp": "20260316_143956",
+  "configuration": {
+    "similarity_threshold": 0.65,
+    "confidence_threshold": 0.7,
+    "min_candidates": 3,
+    "max_candidates": 150,
+    "frequency_weight": 0.3,
+    "centroid_weight": 0.7
+  },
+  "statistics": {
+    "no_results": true
+  },
+  "imputation_results": {}
+}

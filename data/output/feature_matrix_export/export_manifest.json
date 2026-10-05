@@ -1,0 +1,42 @@
+{
+  "created_at": "2026-09-29T01:25:11.730123+00:00",
+  "ground_truth_file": "data/ground_truth/labeled_matches.csv",
+  "config_file": "config.yml",
+  "pipeline_env": "local",
+  "embedding_provider": "openai",
+  "pairs": 49766,
+  "matches": 40220,
+  "non_matches": 9546,
+  "unique_entities": 2535,
+  "entities_missing_from_hash_lookup": 0,
+  "feature_names": [
+    "person_cosine",
+    "taxonomy_dissimilarity",
+    "composite_cosine_squared",
+    "has_related_work",
+    "birth_death_match",
+    "confidence_amplifier_polynomial",
+    "person_title_interaction_cubic",
+    "provision_similarity"
+  ],
+  "scaler_applied": true,
+  "vector_fields": [
+    "composite",
+    "person",
+    "title",
+    "roles",
+    "attribution",
+    "provision",
+    "subjects",
+    "genres",
+    "marcKey",
+    "relatedWork"
+  ],
+  "vectors_exported": 9404,
+  "vectors_missing": 0,
+  "files": {
+    "feature_matrix.parquet": "one row per labeled pair; raw feature columns plus *_scaled columns as fed to the classifier",
+    "entity_fields.parquet": "personId -> (field, hash) join table",
+    "embeddings.parquet": "unique (hash, field) -> text and full embedding vector (list<float32>)"
+  }
+}
