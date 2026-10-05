@@ -811,7 +811,13 @@ class ClusterValidator:
         """
         if not self.validation_config.get("enabled", True):
             return clusters
-            
+
+        # Density-ratio (conductance) splitting: structural criterion measured on
+        # the classifier's own accept/reject decisions instead of re-derived
+        # vector similarities. See prevent_overmerging_density.
+        if self.validation_config.get("method") == "density_ratio":
+            return self.prevent_overmerging_density(clusters)
+
         # Load configuration
         similarity_threshold = self.validation_config.get("similarity_threshold", 0.70)
         min_cluster_size = self.validation_config.get("min_cluster_size", 3)
@@ -862,6 +868,110 @@ class ClusterValidator:
             
         return refined_clusters
         
+    def prevent_overmerging_density(self, clusters: List[List[str]],
+                                    adjudicator=None) -> List[List[str]]:
+        """
+        Split over-merged clusters with a density-ratio (conductance) test.
+
+        A true identity boundary inside a cluster shows a characteristic
+        signature: the two sides are internally dense (members accept each
+        other at the base rate of true pairs) while the boundary is crossed by
+        only a handful of barely-above-threshold edges. The test compares the
+        cross-boundary ACCEPTANCE RATE with the internal density of each side:
+
+            ratio = cross_accept_rate(S, T) / min(density(S), density(T))
+
+        Measured on labeled data ("Schubert, Franz", all 3,916 pairs): true
+        identity boundaries sit at ratio <= 0.07 while the worst legitimate
+        structures (a heterogeneous oeuvre at 0.8, a thinly attached true
+        member at 0.5, the weakest single record at ~0.19) stay far above.
+        Default threshold 0.1 splits every boundary and nothing else.
+
+        Candidate partitions come from the minimum weighted cut of the
+        accepted-edge graph (Stoer-Wagner), applied recursively: false
+        attachments are by construction the cheapest cuts. An optional
+        `adjudicator(crossing_edges) -> bool` is consulted before each split
+        (e.g. a name-uniqueness prior or per-record taxonomy check); splits
+        proceed only when it concurs.
+
+        Uses only self.match_confidences (accepted pairs): a pair absent from
+        it counts as a rejection, which is exactly what the rate test needs.
+        """
+        try:
+            import networkx as nx
+        except ImportError:
+            logger.warning("density_ratio splitting requires networkx; "
+                           "returning clusters unchanged")
+            return clusters
+
+        ratio_threshold = self.validation_config.get("density_ratio_threshold", 0.1)
+        min_size = self.validation_config.get("density_min_cluster_size", 3)
+
+        # Normalize confidences to frozenset keys
+        conf = {}
+        for k, p in (self.match_confidences or {}).items():
+            conf[frozenset(k)] = float(p)
+
+        def density(members):
+            if len(members) < 2:
+                return 1.0
+            n = len(members)
+            hits = sum(1 for i, a in enumerate(members) for b in members[i + 1:]
+                       if frozenset((a, b)) in conf)
+            return hits / (n * (n - 1) / 2)
+
+        def split(members, depth=0):
+            members = list(members)
+            if len(members) < min_size or depth > 20:
+                return [members]
+            G = nx.Graph()
+            G.add_nodes_from(members)
+            for i, a in enumerate(members):
+                for b in members[i + 1:]:
+                    p = conf.get(frozenset((a, b)))
+                    if p is not None:
+                        G.add_edge(a, b, weight=p)
+            comps = list(nx.connected_components(G))
+            if len(comps) > 1:  # closure input should be connected; be safe
+                out = []
+                for c in comps:
+                    out.extend(split(sorted(c), depth + 1))
+                return out
+            if G.number_of_edges() == 0:
+                return [[m] for m in members]
+
+            cut_value, (S, T) = nx.stoer_wagner(G)
+            S, T = sorted(S), sorted(T)
+            crossing = [(a, b, conf[frozenset((a, b))])
+                        for a in S for b in T if frozenset((a, b)) in conf]
+            cross_rate = len(crossing) / (len(S) * len(T))
+            base = max(min(density(S), density(T)), 1e-9)
+            ratio = cross_rate / base
+
+            if ratio < ratio_threshold:
+                if adjudicator is not None and not adjudicator(crossing):
+                    logger.info(f"density split vetoed by adjudicator "
+                                f"(|S|={len(S)}, |T|={len(T)}, ratio={ratio:.3f})")
+                    return [members]
+                logger.info(f"density split: {len(members)} -> {len(S)}+{len(T)} "
+                            f"(cut={cut_value:.3f}, cross_rate={cross_rate:.3f}, "
+                            f"ratio={ratio:.3f})")
+                return split(S, depth + 1) + split(T, depth + 1)
+            logger.debug(f"density split rejected: ratio={ratio:.3f} "
+                         f">= {ratio_threshold} for cluster of {len(members)}")
+            return [members]
+
+        refined = []
+        n_split = 0
+        for cluster in clusters:
+            parts = split(sorted(cluster))
+            if len(parts) > 1:
+                n_split += 1
+            refined.extend(parts)
+        logger.info(f"density-ratio anti-overmerging: {len(clusters)} clusters in, "
+                    f"{len(refined)} out ({n_split} split)")
+        return refined
+
     def _build_similarity_matrix(self, entities: List[str]) -> Dict[str, Dict[str, float]]:
         """
         Build a similarity matrix for all entity pairs.
